@@ -19,12 +19,14 @@ function initNavigation(page) {
   });
 }
 
+let editingCard = null;
+
 function initGoalsPage() {
   const filterTabs = document.querySelectorAll('#goalFilterTabs .filter-tab');
-  const cardWrappers = document.querySelectorAll('#goalsGrid .goal-card-wrapper');
+  const goalsGrid = document.getElementById('goalsGrid');
 
   function filterGoals(filter) {
-    cardWrappers.forEach(w => {
+    document.querySelectorAll('#goalsGrid .goal-card-wrapper').forEach(w => {
       const status = w.dataset.status;
       let show = false;
       if (filter === 'all') show = true;
@@ -50,7 +52,7 @@ function initGoalsPage() {
   const goalSearch = document.getElementById('goalSearch');
   goalSearch?.addEventListener('input', e => {
     const q = e.target.value.toLowerCase();
-    cardWrappers.forEach(w => {
+    document.querySelectorAll('#goalsGrid .goal-card-wrapper').forEach(w => {
       if (w.dataset.status === 'create') return;
       const title = w.querySelector('.goal-title')?.textContent.toLowerCase() || '';
       const desc = w.querySelector('.goal-desc')?.textContent.toLowerCase() || '';
@@ -58,19 +60,34 @@ function initGoalsPage() {
     });
   });
 
-  document.getElementById('goalsGrid')?.addEventListener('click', e => {
-    const btn = e.target.closest('.delete-btn');
-    if (!btn) return;
-    const wrapper = btn.closest('.goal-card-wrapper');
-    const name = wrapper?.querySelector('.goal-title')?.textContent || 'this goal';
-    if (wrapper && confirm(`Delete "${name}"?`)) {
-      wrapper.style.transition = 'opacity .25s, transform .25s';
-      wrapper.style.opacity = '0';
-      wrapper.style.transform = 'scale(.95)';
-      setTimeout(() => {
-        wrapper.remove();
-        updateBadge();
-      }, 250);
+  goalsGrid?.addEventListener('click', e => {
+    const deleteBtn = e.target.closest('.delete-btn');
+    if (deleteBtn) {
+      const wrapper = deleteBtn.closest('.goal-card-wrapper');
+      const name = wrapper?.querySelector('.goal-title')?.textContent || 'this goal';
+      if (wrapper && confirm(`Delete "${name}"?`)) {
+        wrapper.style.transition = 'opacity .25s, transform .25s';
+        wrapper.style.opacity = '0';
+        wrapper.style.transform = 'scale(.95)';
+        setTimeout(() => {
+          wrapper.remove();
+          updateBadge();
+        }, 250);
+      }
+      return;
+    }
+
+    const aiBtn = e.target.closest('.ai-btn');
+    if (aiBtn) {
+      const modal = new bootstrap.Modal(document.getElementById('aiAdvisoryModal'));
+      modal.show();
+      return;
+    }
+
+    const editBtn = e.target.closest('.edit-btn');
+    if (editBtn) {
+      const wrapper = editBtn.closest('.goal-card-wrapper');
+      openEditGoalModal(wrapper);
     }
   });
 
@@ -78,6 +95,68 @@ function initGoalsPage() {
     const count = document.querySelectorAll('#goalsGrid .goal-card-wrapper:not([data-status="create"])').length;
     const badge = document.getElementById('goalsBadge');
     if (badge) badge.textContent = count;
+  }
+
+  function parseCurrency(value) {
+    if (!value) return 0;
+    const cleaned = value.toString().replace(/[^0-9.-]/g, '');
+    return Number(cleaned) || 0;
+  }
+
+  function computeProgress(saved, target) {
+    const savedValue = parseCurrency(saved);
+    const targetValue = parseCurrency(target);
+    if (!targetValue) return 0;
+    return Math.min(100, Math.round((savedValue / targetValue) * 100));
+  }
+
+  function openEditGoalModal(wrapper) {
+    if (!wrapper) return;
+    editingCard = wrapper;
+    const title = wrapper.querySelector('.goal-title')?.textContent || '';
+    const desc = wrapper.querySelector('.goal-desc')?.textContent || '';
+    const amounts = wrapper.querySelector('.goal-amounts')?.textContent || '';
+    const savedMatch = amounts.match(/RM\s*([\d,]+)/);
+    const targetMatch = amounts.match(/\/\s*RM\s*([\d,]+)/);
+    const monthlyText = wrapper.querySelector('.meta-monthly')?.textContent || '';
+    const monthlyMatch = monthlyText.match(/RM\s*([\d,]+)/);
+    const dateText = wrapper.querySelector('.meta-row span')?.textContent || '';
+    const dateLabel = dateText.replace(/^.*(Target:|Completed:)\s*/, '').trim();
+    const icon = wrapper.querySelector('.goal-icon')?.textContent || '🏠';
+    const statusKey = wrapper.dataset.status || 'on-track';
+    const statusBadge = wrapper.querySelector('.status-badge');
+
+    document.getElementById('cgName').value = title;
+    document.getElementById('cgDesc').value = desc === 'No description provided.' ? '' : desc;
+    document.getElementById('cgTarget').value = targetMatch ? `RM ${targetMatch[1].replace(/,/g, '')}` : '';
+    document.getElementById('cgSavings').value = savedMatch ? `RM ${savedMatch[1].replace(/,/g, '')}` : '';
+    document.getElementById('cgMonthly').value = monthlyMatch ? `RM ${monthlyMatch[1].replace(/,/g, '')}` : '';
+
+    const dateInput = document.getElementById('cgDate');
+    const months = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+    const [mon, year] = dateLabel.split(' ');
+    dateInput.value = months[mon] && year ? `${year}-${months[mon]}` : '';
+
+    document.querySelectorAll('#categoryDropdown .custom-option').forEach(opt => {
+      const iconText = opt.dataset.icon || '';
+      if (iconText === icon) {
+        opt.classList.add('selected');
+        document.getElementById('categoryIcon').textContent = iconText;
+        document.getElementById('categoryLabel').textContent = opt.textContent.replace(iconText, '').trim();
+      } else {
+        opt.classList.remove('selected');
+      }
+    });
+
+    document.getElementById('saveGoalBtn').textContent = 'Update Goal';
+    document.getElementById('createGoalModalTitle').textContent = 'Update Goal';
+    document.getElementById('createGoalModalSub').textContent = 'Edit your goal details and save changes.';
+    if (statusBadge) {
+      document.getElementById('createGoalModal').dataset.editingStatus = statusKey;
+    }
+    document.getElementById('createGoalModalTitle').textContent = 'Update Goal';
+    document.getElementById('createGoalModalSub').textContent = 'Edit your goal details and save changes.';
+    new bootstrap.Modal(document.getElementById('createGoalModal')).show();
   }
 
   initCategoryDropdown();
@@ -112,11 +191,15 @@ function initCreateGoalModal() {
   const goalsGrid = document.getElementById('goalsGrid');
   const createCard = document.querySelector('[data-status="create"]');
   if (!saveGoalBtn || !goalsGrid || !createCard) return;
-  saveGoalBtn.addEventListener('click', () => {
+
+  saveGoalBtn.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
     const name = document.getElementById('cgName')?.value.trim();
     if (!name) { alert('Please enter a goal name.'); return; }
     const desc = document.getElementById('cgDesc')?.value.trim();
     const target = document.getElementById('cgTarget')?.value.trim() || '0';
+    const savings = document.getElementById('cgSavings')?.value.trim() || '0';
     const monthly = document.getElementById('cgMonthly')?.value.trim() || '0';
     const dateVal = document.getElementById('cgDate')?.value;
     const icon = document.getElementById('categoryIcon')?.textContent || '🎯';
@@ -126,18 +209,78 @@ function initCreateGoalModal() {
       const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       dateLabel = `${months[parseInt(mo, 10) - 1]} ${yr}`;
     }
-    const newWrapper = document.createElement('div');
-    newWrapper.className = 'col-12 col-md-6 col-xl-4 goal-card-wrapper';
-    newWrapper.dataset.status = 'on-track';
-    newWrapper.innerHTML = `\n      <div class="goal-card">\n        <div class="goal-card-top">\n          <span class="goal-icon">${icon}</span>\n          <span class="status-badge on-track">On Track</span>\n        </div>\n        <h5 class="goal-title">${esc(name)}</h5>\n        <p class="goal-desc">${esc(desc) || 'No description provided.'}</p>\n        <div class="progress goal-progress"><div class="progress-bar" style="width:0%"></div></div>\n        <p class="goal-amounts"><strong>RM 0</strong> <span>/ ${esc(target)}</span></p>\n        <div class="goal-meta">\n          <div class="meta-row">\n            <span><i class="bi bi-calendar3"></i> Target: ${dateLabel}</span>\n            <div class="goal-actions">\n              <button class="action-btn"><i class="bi bi-pencil-square"></i></button>\n              <button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button>\n            </div>\n          </div>\n          <span class="meta-monthly"><i class="bi bi-coin"></i> ${esc(monthly)} / month</span>\n        </div>\n      </div>`;
-    goalsGrid.insertBefore(newWrapper, createCard);
-    bootstrap.Modal.getInstance(document.getElementById('createGoalModal'))?.hide();
+    const progressPercent = computeProgress(savings, target);
+
+    if (editingCard) {
+      updateGoalCard(editingCard, { icon, name, desc, target, savings, dateLabel, monthly, progressPercent });
+      editingCard = null;
+      saveGoalBtn.textContent = 'Save Goal';
+    } else {
+      const newWrapper = document.createElement('div');
+      newWrapper.className = 'col-12 col-md-6 col-xl-4 goal-card-wrapper';
+      newWrapper.dataset.status = 'on-track';
+      newWrapper.innerHTML = `\n      <div class="goal-card">\n        <div class="goal-card-top">\n          <span class="goal-icon">${icon}</span>\n          <span class="status-badge on-track">On Track</span>\n        </div>\n        <h5 class="goal-title">${esc(name)}</h5>\n        <p class="goal-desc">${esc(desc) || 'No description provided.'}</p>\n        <div class="progress goal-progress"><div class="progress-bar" style="width:${progressPercent}%"></div></div>\n        <p class="goal-amounts"><strong>RM ${esc(savings)}</strong> <span>/ ${esc(target)}</span></p>\n        <div class="goal-meta">\n          <div class="meta-row">\n            <span><i class="bi bi-calendar3"></i> Target: ${dateLabel}</span>\n            <div class="goal-actions">\n              <button type="button" class="action-btn edit-btn"><i class="bi bi-pencil-square"></i></button>\n              <button type="button" class="action-btn delete-btn"><i class="bi bi-trash3"></i></button>\n            </div>\n          </div>\n          <span class="meta-monthly"><i class="bi bi-coin"></i> ${esc(monthly)} / month</span>\n        </div>\n      </div>`;
+      goalsGrid.insertBefore(newWrapper, createCard);
+    }
+
+    const modalElement = document.getElementById('createGoalModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    modal.hide();
     ['cgName','cgDesc','cgTarget','cgSavings','cgMonthly','cgDate'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
-    document.getElementById('goalsBadge').textContent = document.querySelectorAll('#goalsGrid .goal-card-wrapper:not([data-status="create"])').length;
+    document.getElementById('categoryIcon').textContent = '🏠';
+    document.getElementById('categoryLabel').textContent = 'Home';
+    document.querySelectorAll('#categoryDropdown .custom-option').forEach((opt, index) => {
+      opt.classList.toggle('selected', index === 0);
+    });
+    updateBadge();
   });
+
+  function resetCreateGoalForm() {
+    ['cgName','cgDesc','cgTarget','cgSavings','cgMonthly','cgDate'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('categoryIcon').textContent = '🏠';
+    document.getElementById('categoryLabel').textContent = 'Home';
+    document.querySelectorAll('#categoryDropdown .custom-option').forEach((opt, index) => {
+      opt.classList.toggle('selected', index === 0);
+    });
+    saveGoalBtn.textContent = 'Save Goal';
+    document.getElementById('createGoalModalTitle').textContent = 'Create New Goal';
+    document.getElementById('createGoalModalSub').textContent = 'Define your financial goal and start tracking your progress.';
+    editingCard = null;
+  }
+
+  document.getElementById('createGoalModal')?.addEventListener('show.bs.modal', () => {
+    if (!editingCard) resetCreateGoalForm();
+  });
+
+  document.getElementById('createGoalModal')?.addEventListener('hidden.bs.modal', () => {
+    resetCreateGoalForm();
+  });
+}
+
+function updateGoalCard(wrapper, data) {
+  if (!wrapper) return;
+  wrapper.querySelector('.goal-icon').textContent = data.icon;
+  wrapper.querySelector('.goal-title').textContent = data.name;
+  wrapper.querySelector('.goal-desc').textContent = data.desc || 'No description provided.';
+  wrapper.querySelector('.goal-amounts strong').textContent = `RM ${data.savings}`;
+  if (data.status) {
+    wrapper.dataset.status = data.status;
+    const badge = wrapper.querySelector('.status-badge');
+    if (badge) {
+      badge.className = `status-badge ${data.status}`;
+      badge.textContent = data.status === 'completed' ? 'Completed' : data.status === 'at-risk' ? 'At Risk' : data.status === 'high-risk' ? 'High Risk' : 'On Track';
+    }
+  }
+  wrapper.querySelector('.goal-amounts span').textContent = `/ ${data.target}`;
+  wrapper.querySelector('.goal-meta .meta-row span').innerHTML = `<i class="bi bi-calendar3"></i> Target: ${data.dateLabel}`;
+  wrapper.querySelector('.meta-monthly').textContent = `RM ${data.monthly} / month`;
+  wrapper.querySelector('.progress-bar').style.width = `${data.progressPercent}%`;
 }
 
 function initAiAdvisoryModal() {
@@ -306,9 +449,151 @@ function initInvestmentsPage() {
     firstRiskTab.classList.add('active', 'conservative');
     renderRisk('conservative');
   }
+
+  const API_BASE_URL = 'http://localhost:3001';
+  const GOALS_LIST = [
+    { id: 'goal-1', name: 'Dream Home Down Payment', saved: 88400, target: 130000, status: 'on-track' },
+    { id: 'goal-2', name: 'Personal Savings Fund', saved: 44000, target: 100000, status: 'on-track' },
+    { id: 'goal-3', name: 'Emergency Fund', saved: 16500, target: 30000, status: 'at-risk' },
+    { id: 'goal-4', name: 'Travel Fund', saved: 16400, target: 20000, status: 'on-track' },
+    { id: 'goal-5', name: 'Early Retirement Fund', saved: 210000, target: 1000000, status: 'high-risk' },
+    { id: 'goal-6', name: 'Japan Travel Fund', saved: 5500, target: 5500, status: 'completed' },
+    { id: 'goal-7', name: 'Laptop Upgrade Fund', saved: 4000, target: 4000, status: 'completed' },
+  ];
+
+  let selectedPortfolio = 'conservative';
+  let selectedGoalId = null;
+  let isConfirmLoading = false;
+
+  const selectGoalModal = new bootstrap.Modal(document.getElementById('selectGoalModal'));
+  const confirmPortfolioModal = new bootstrap.Modal(document.getElementById('confirmPortfolioModal'));
+  const portfolioToast = new bootstrap.Toast(document.getElementById('portfolioToast'));
+  const goalOptionsList = document.getElementById('goalOptionsList');
+  const goalSelectContinueBtn = document.getElementById('goalSelectContinueBtn');
+  const confirmPortfolioGoal = document.getElementById('confirmPortfolioGoal');
+  const confirmPortfolioRisk = document.getElementById('confirmPortfolioRisk');
+  const confirmPortfolioExpected = document.getElementById('confirmPortfolioExpected');
+  const confirmPortfolioError = document.getElementById('confirmPortfolioError');
+  const confirmBackBtn = document.getElementById('confirmBackBtn');
+  const confirmApplyBtn = document.getElementById('confirmApplyBtn');
+
+  function formatCurrency(value) {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function getStatusLabel(status) {
+    if (status === 'completed') return 'Completed';
+    if (status === 'high-risk') return 'High Risk';
+    if (status === 'at-risk') return 'At Risk';
+    return 'On Track';
+  }
+
+  function renderGoalOptions() {
+    if (!goalOptionsList) return;
+    goalOptionsList.innerHTML = GOALS_LIST.map(goal => `
+      <label class="goal-select-card ${selectedGoalId === goal.id ? 'selected' : ''}" for="goal-${goal.id}">
+        <input type="radio" id="goal-${goal.id}" name="selectedGoal" class="goal-select-input" value="${goal.id}" ${selectedGoalId === goal.id ? 'checked' : ''} />
+        <span class="goal-select-radio"></span>
+        <div class="goal-select-info">
+          <span class="goal-select-name">${goal.name}</span>
+          <span class="goal-select-meta">RM ${formatCurrency(goal.saved)} / RM ${formatCurrency(goal.target)}</span>
+        </div>
+        <span class="status-badge ${goal.status}">${getStatusLabel(goal.status)}</span>
+      </label>
+    `).join('');
+
+    goalOptionsList.querySelectorAll('.goal-select-input').forEach(input => {
+      input.addEventListener('change', e => {
+        selectedGoalId = e.target.value;
+        renderGoalOptions();
+        updateContinueState();
+      });
+    });
+  }
+
+  function updateContinueState() {
+    if (!goalSelectContinueBtn) return;
+    goalSelectContinueBtn.disabled = !selectedGoalId;
+  }
+
+  function resetSelectionState() {
+    selectedGoalId = null;
+    selectedPortfolio = (document.querySelector('#riskTabs .risk-tab.active')?.dataset.risk) || 'conservative';
+    renderGoalOptions();
+    updateContinueState();
+    if (confirmPortfolioError) confirmPortfolioError.style.display = 'none';
+  }
+
+  function showConfirmationModal() {
+    const selectedGoal = GOALS_LIST.find(g => g.id === selectedGoalId);
+    if (!selectedGoal) return;
+    confirmPortfolioRisk.textContent = selectedPortfolio.charAt(0).toUpperCase() + selectedPortfolio.slice(1);
+    confirmPortfolioExpected.textContent = RISK_DATA[selectedPortfolio].returnVal;
+    confirmPortfolioGoal.textContent = `${selectedGoal.name} — RM ${formatCurrency(selectedGoal.saved)} / RM ${formatCurrency(selectedGoal.target)}`;
+    confirmPortfolioError.style.display = 'none';
+    confirmPortfolioModal.show();
+  }
+
+  function setConfirmLoading(loading) {
+    isConfirmLoading = loading;
+    if (confirmApplyBtn) {
+      confirmApplyBtn.disabled = loading;
+      confirmApplyBtn.textContent = loading ? 'Applying...' : 'Confirm';
+    }
+    if (confirmBackBtn) confirmBackBtn.disabled = loading;
+  }
+
+  async function applyPortfolioToGoal() {
+    if (!selectedGoalId) return;
+    setConfirmLoading(true);
+    const endpoint = `${API_BASE_URL}/api/goals/${selectedGoalId}/apply-portfolio`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ portfolioType: selectedPortfolio }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody.message || 'Unable to apply portfolio.');
+      }
+
+      portfolioToast.show();
+      confirmPortfolioModal.hide();
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1200);
+    } catch (err) {
+      if (confirmPortfolioError) {
+        confirmPortfolioError.textContent = err.message || 'Failed to apply portfolio. Please try again.';
+        confirmPortfolioError.style.display = 'block';
+      }
+    } finally {
+      setConfirmLoading(false);
+    }
+  }
+
+  renderGoalOptions();
+  updateContinueState();
+
+  goalSelectContinueBtn?.addEventListener('click', () => {
+    selectGoalModal.hide();
+    showConfirmationModal();
+  });
+
+  confirmBackBtn?.addEventListener('click', () => {
+    confirmPortfolioModal.hide();
+    selectGoalModal.show();
+  });
+
+  confirmApplyBtn?.addEventListener('click', applyPortfolioToGoal);
+
   document.getElementById('applyPortfolioBtn')?.addEventListener('click', () => {
-    const active = document.querySelector('#riskTabs .risk-tab.active');
-    alert(`${active?.dataset.risk || 'Conservative'} portfolio applied to your goals!`);
+    selectedPortfolio = document.querySelector('#riskTabs .risk-tab.active')?.dataset.risk || 'conservative';
+    resetSelectionState();
+    selectGoalModal.show();
   });
 }
 

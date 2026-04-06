@@ -233,7 +233,7 @@ body {
 
 .status-badge { font-size: .72rem; font-weight: 700; border-radius: 99px; padding: 4px 12px; }
 .status-badge.on-track  { background: #dcfce7; color: #15803d; }
-.status-badge.at-risk   { background: #fff7ed; color: #c2410c; border: 1.5px solid #fdba74; }
+ .status-badge.at-risk   { background: #ffedd5; color: #c2410c; border: none; }
 .status-badge.high-risk { background: #fee2e2; color: #b91c1c; }
 .status-badge.completed { background: #f3f4f6; color: #4b5563; }
 
@@ -350,8 +350,33 @@ body {
   border-radius: 99px; padding: 10px; font-family: var(--font-b);
   font-size: .86rem; font-weight: 700; cursor: pointer;
   transition: background var(--T);
+  position: relative;
+  z-index: 1;
 }
 .btn-modal-save:hover { background: var(--blue-dark); }
+
+.goal-options-list { display: grid; gap: 12px; margin-top: 18px; }
+.goal-select-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  border: 1.5px solid var(--border); border-radius: var(--r-card);
+  padding: 16px; cursor: pointer; transition: border-color var(--T), background var(--T);
+  position: relative;
+}
+.goal-select-card.selected { border-color: var(--blue); background: #eff4ff; }
+.goal-select-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+.goal-select-radio {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border);
+  flex-shrink: 0; margin-top: 4px;
+}
+.goal-select-card.selected .goal-select-radio { border-color: var(--blue); background: var(--blue); }
+.goal-select-card input[type="radio"]:checked + .goal-select-radio { border-color: var(--blue); background: var(--blue); }
+.goal-select-info { flex: 1; }
+.goal-select-name { font-weight: 700; margin-bottom: 6px; display: block; }
+.goal-select-meta { color: var(--text-mid); font-size: .88rem; line-height: 1.5; }
+.confirm-summary { background: #fafbff; border-radius: var(--r-card); padding: 16px; margin-top: 18px; }
+.confirm-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.confirm-label { font-size: .82rem; color: var(--text-light); }
+.confirm-value { font-weight: 700; color: var(--text-dark); }
 
 /* ════════════════════════════════════════
    MODAL: AI ADVISORY
@@ -381,6 +406,11 @@ body {
   border: 1.5px solid var(--border); border-radius: var(--r-card);
   padding: 16px; cursor: pointer;
   transition: border-color var(--T), box-shadow var(--T);
+  min-height: 190px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .ai-option-card:hover { border-color: var(--blue); }
 .ai-option-card.selected { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,110,255,.15); }

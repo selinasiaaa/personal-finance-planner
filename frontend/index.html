@@ -32,28 +32,28 @@
     <div class="col-6 col-xl-3">
       <div class="summary-card summary-blue">
         <p class="summary-label">Total Saved</p>
-        <h2 class="summary-value">RM 84,250</h2>
+        <h2 class="summary-value">RM 384,800</h2>
         <p class="summary-sub"><span class="text-success fw-semibold">↑ +8.3%</span> vs last quarter</p>
       </div>
     </div>
     <div class="col-6 col-xl-3">
       <div class="summary-card summary-green">
         <p class="summary-label">Goals On Track</p>
-        <h2 class="summary-value">3 / 5</h2>
+        <h2 class="summary-value">3 / 7</h2>
         <p class="summary-sub">2 need attention</p>
       </div>
     </div>
     <div class="col-6 col-xl-3">
       <div class="summary-card summary-orange">
         <p class="summary-label">Monthly Contribution</p>
-        <h2 class="summary-value">RM 3,200</h2>
+        <h2 class="summary-value">RM 6,825</h2>
         <p class="summary-sub"><span class="text-success fw-semibold">↑ +RM400</span> this month</p>
       </div>
     </div>
     <div class="col-6 col-xl-3">
       <div class="summary-card summary-rainbow">
         <p class="summary-label">Projected by 2030</p>
-        <h2 class="summary-value">RM 312,000</h2>
+        <h2 class="summary-value">RM 500,000</h2>
         <p class="summary-sub">Across all goals</p>
       </div>
     </div>
@@ -62,6 +62,7 @@
     <button class="filter-tab active" data-filter="all">All Goals</button>
     <button class="filter-tab" data-filter="on-track">On Track</button>
     <button class="filter-tab" data-filter="at-risk">At Risk</button>
+    <button class="filter-tab" data-filter="high-risk">High Risk</button>
     <button class="filter-tab" data-filter="completed">Completed</button>
   </div>
   <div class="row g-3" id="goalsGrid">
@@ -73,7 +74,7 @@
         <div class="progress goal-progress"><div class="progress-bar" style="width:68%"></div></div>
         <p class="goal-amounts"><strong>RM 88,400</strong> <span>/ RM 130,000</span></p>
         <div class="goal-meta">
-          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Dec 2030</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Dec 2030</span><div class="goal-actions"><button type="button" class="action-btn edit-btn"><i class="bi bi-pencil-square"></i></button><button type="button" class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
           <span class="meta-monthly"><i class="bi bi-coin"></i> RM 1,800 / month</span>
         </div>
       </div>
@@ -86,7 +87,7 @@
         <div class="progress goal-progress"><div class="progress-bar" style="width:44%"></div></div>
         <p class="goal-amounts"><strong>RM 44,000</strong> <span>/ RM 100,000</span></p>
         <div class="goal-meta">
-          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Sep 2031</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Sep 2031</span><div class="goal-actions"><button type="button" class="action-btn edit-btn"><i class="bi bi-pencil-square"></i></button><button type="button" class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
           <span class="meta-monthly"><i class="bi bi-coin"></i> RM 1,200 / month</span>
         </div>
       </div>
@@ -99,7 +100,7 @@
         <div class="progress goal-progress"><div class="progress-bar" style="width:55%"></div></div>
         <p class="goal-amounts"><strong>RM 16,500</strong> <span>/ RM 30,000</span></p>
         <div class="goal-meta">
-          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Jun 2027</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Jun 2027</span><div class="goal-actions"><button type="button" class="action-btn edit-btn"><i class="bi bi-pencil-square"></i></button><button type="button" class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
           <span class="meta-monthly"><i class="bi bi-coin"></i> RM 375 / month</span>
         </div>
       </div>
@@ -112,8 +113,47 @@
         <div class="progress goal-progress"><div class="progress-bar" style="width:82%"></div></div>
         <p class="goal-amounts"><strong>RM 16,400</strong> <span>/ RM 20,000</span></p>
         <div class="goal-meta">
-          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Aug 2027</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Aug 2027</span><div class="goal-actions"><button type="button" class="action-btn edit-btn"><i class="bi bi-pencil-square"></i></button><button type="button" class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
           <span class="meta-monthly"><i class="bi bi-coin"></i> RM 600 / month</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="high-risk">
+      <div class="goal-card">
+        <div class="goal-card-top"><span class="goal-icon">⛱️</span><span class="status-badge high-risk">High Risk</span></div>
+        <h5 class="goal-title">Early Retirement Fund</h5>
+        <p class="goal-desc">Financial independence by age 51 — retire comfortably</p>
+        <div class="progress goal-progress"><div class="progress-bar" style="width:21%"></div></div>
+        <p class="goal-amounts"><strong>RM 210,000</strong> <span>/ RM 1,000,000</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Mar 2055</span><div class="goal-actions"><button type="button" class="action-btn ai-btn" title="AI Advisory"><i class="bi bi-robot"></i></button><button type="button" class="action-btn edit-btn"><i class="bi bi-pencil-square"></i></button><button type="button" class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 2,100 / month</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="completed">
+      <div class="goal-card">
+        <div class="goal-card-top"><span class="goal-icon">✈️</span><span class="status-badge completed">Completed</span></div>
+        <h5 class="goal-title">Japan Travel Fund</h5>
+        <p class="goal-desc">Save for a trip to Japan, including flights and accommodation</p>
+        <div class="progress goal-progress"><div class="progress-bar" style="width:100%"></div></div>
+        <p class="goal-amounts"><strong>RM 5,500</strong> <span>/ RM 5,500</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Completed: Dec 2024</span><div class="goal-actions"><button type="button" class="action-btn edit-btn"><i class="bi bi-pencil-square"></i></button><button type="button" class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 500 / month</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="completed">
+      <div class="goal-card">
+        <div class="goal-card-top"><span class="goal-icon">📦</span><span class="status-badge completed">Completed</span></div>
+        <h5 class="goal-title">Laptop Upgrade Fund</h5>
+        <p class="goal-desc">A dedicated goal for saving towards a new laptop or device upgrade.</p>
+        <div class="progress goal-progress"><div class="progress-bar" style="width:100%"></div></div>
+        <p class="goal-amounts"><strong>RM 4,000</strong> <span>/ RM 4,000</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Completed: Aug 2025</span><div class="goal-actions"><button type="button" class="action-btn edit-btn"><i class="bi bi-pencil-square"></i></button><button type="button" class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 250 / month</span>
         </div>
       </div>
     </div>
@@ -133,8 +173,8 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content modal-custom">
       <div class="modal-body p-4">
-        <h4 class="modal-main-title">Create New Goal</h4>
-        <p class="modal-main-sub">Define your financial goal and start tracking your progress.</p>
+        <h4 id="createGoalModalTitle" class="modal-main-title">Create New Goal</h4>
+        <p id="createGoalModalSub" class="modal-main-sub">Define your financial goal and start tracking your progress.</p>
         <div class="modal-field"><label class="modal-label">Goal Name</label>
           <input type="text" class="modal-input-field" id="cgName" placeholder="e.g. Dream Vacation Fund" /></div>
         <div class="modal-field"><label class="modal-label">Description</label>
@@ -170,8 +210,8 @@
           </div></div>
         </div>
         <div class="d-flex gap-3 mt-4">
-          <button class="btn-modal-cancel flex-fill" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn-modal-save flex-fill" id="saveGoalBtn">Save Goal</button>
+          <button type="button" class="btn-modal-cancel flex-fill" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-modal-save flex-fill" id="saveGoalBtn">Save Goal</button>
         </div>
       </div>
     </div>
@@ -217,12 +257,12 @@
             </div>
           </div>
         </div>
-        <p class="section-divider-label">AI ADVISORY RESPONSE</p>
+        <p class="section-divider-label">AI Advisory Response ✦</p>
         <div class="ai-response-box">
           <div class="d-flex align-items-center justify-content-between mb-2">
             <div class="d-flex align-items-center gap-2">
-              <div class="ai-avatar"><i class="bi bi-star-fill"></i></div>
-              <div><p class="ai-name">AI Advisor</p><p class="ai-powered">Powered by Gemini · Smart Suggestions v3.4</p></div>
+              <div class="ai-avatar">✦</div>
+              <div><p class="ai-name">WealthTrack AI Advisor</p><p class="ai-powered">Powered by Gemini · Smart Suggestions · Feature 3.4</p></div>
             </div>
             <span class="ai-generated-badge">AI Generated</span>
           </div>
@@ -235,7 +275,7 @@
           </div>
         </div>
         <div class="d-flex gap-2 mt-4 flex-wrap">
-          <button class="btn-ai-regen"><i class="bi bi-arrow-clockwise"></i> Regenerate</button>
+          <button class="btn-ai-regen">↻ Regenerate</button>
           <button class="btn-ai-dismiss" data-bs-dismiss="modal">Dismiss</button>
           <button class="btn-ai-apply ms-auto" id="applyOptionBtn" disabled>Apply Selected Option</button>
         </div>
