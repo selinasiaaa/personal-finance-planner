@@ -14,7 +14,6 @@ function createSidebar(currentPage = 'goals') {
         <a href="index.html" class="nav-item ${currentPage === 'goals' ? 'active' : ''}" data-section="goals">
           <i class="bi bi-flag-fill"></i>
           <span>Financial Goals</span>
-          <span class="badge-count" id="goalsBadge">5</span>
         </a>
         <a href="investments.html" class="nav-item ${currentPage === 'investments' ? 'active' : ''}" data-section="investments">
           <i class="bi bi-graph-up-arrow"></i>

@@ -71,7 +71,6 @@ function initGoalsPage() {
         wrapper.style.transform = 'scale(.95)';
         setTimeout(() => {
           wrapper.remove();
-          updateBadge();
         }, 250);
       }
       return;
@@ -90,12 +89,6 @@ function initGoalsPage() {
       openEditGoalModal(wrapper);
     }
   });
-
-  function updateBadge() {
-    const count = document.querySelectorAll('#goalsGrid .goal-card-wrapper:not([data-status="create"])').length;
-    const badge = document.getElementById('goalsBadge');
-    if (badge) badge.textContent = count;
-  }
 
   function parseCurrency(value) {
     if (!value) return 0;
@@ -162,7 +155,6 @@ function initGoalsPage() {
   initCategoryDropdown();
   initCreateGoalModal();
   initAiAdvisoryModal();
-  updateBadge();
 }
 
 function initCategoryDropdown() {
@@ -235,7 +227,6 @@ function initCreateGoalModal() {
     document.querySelectorAll('#categoryDropdown .custom-option').forEach((opt, index) => {
       opt.classList.toggle('selected', index === 0);
     });
-    updateBadge();
   });
 
   function resetCreateGoalForm() {
