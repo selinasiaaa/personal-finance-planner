@@ -442,7 +442,7 @@ body {
 /* ════════════════════════════════════════
    INVESTMENTS
 ════════════════════════════════════════ */
-.inv-container { max-width: 880px; }
+.inv-container { width: 100%; }
 .inv-main-title { font-family: var(--font-h); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
 .inv-main-sub { font-size: .88rem; color: var(--text-mid); margin-bottom: 24px; }
 
