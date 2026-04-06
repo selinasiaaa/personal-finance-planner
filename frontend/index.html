@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WealthTrack — Financial Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="bi bi-bar-chart-fill"></i></div>
+    <span class="logo-text">WealthTrack</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-section="goals">
+      <i class="bi bi-flag-fill"></i>
+      <span>Financial Goals</span>
+      <span class="badge-count" id="goalsBadge">5</span>
+    </a>
+    <a href="#" class="nav-item" data-section="investments">
+      <i class="bi bi-graph-up-arrow"></i>
+      <span>Investments</span>
+    </a>
+    <a href="#" class="nav-item" data-section="roi">
+      <i class="bi bi-calculator-fill"></i>
+      <span>ROI Calculator</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar">AT</div>
+      <div>
+        <p class="user-name">Alexander</p>
+        <p class="user-role">Premium Plan</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content" id="mainContent">
+
+<!-- ══════════════════════════════════════
+     GOALS SECTION
+══════════════════════════════════════ -->
+<section id="goals-section" class="app-section active-section">
+  <div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <h1 class="page-title">Financial Goals</h1>
+    <div class="d-flex gap-3 align-items-center flex-wrap">
+      <div class="search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" id="goalSearch" placeholder="Search goals, funds…" />
+      </div>
+      <button class="btn-primary-action" data-bs-toggle="modal" data-bs-target="#createGoalModal">
+        <i class="bi bi-plus-lg"></i> Add Goal
+      </button>
+    </div>
+  </div>
+
+  <div class="alert-banner mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <span><strong>3 goals are on track.</strong> Your Emergency Fund is falling behind — you're 12% off track.</span>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+      <div class="summary-card summary-blue">
+        <p class="summary-label">Total Saved</p>
+        <h2 class="summary-value">RM 84,250</h2>
+        <p class="summary-sub"><span class="text-success fw-semibold">↑ +8.3%</span> vs last quarter</p>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="summary-card summary-green">
+        <p class="summary-label">Goals On Track</p>
+        <h2 class="summary-value">3 / 5</h2>
+        <p class="summary-sub">2 need attention</p>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="summary-card summary-orange">
+        <p class="summary-label">Monthly Contribution</p>
+        <h2 class="summary-value">RM 3,200</h2>
+        <p class="summary-sub"><span class="text-success fw-semibold">↑ +RM400</span> this month</p>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="summary-card summary-rainbow">
+        <p class="summary-label">Projected by 2030</p>
+        <h2 class="summary-value">RM 312,000</h2>
+        <p class="summary-sub">Across all goals</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-tabs mb-4" id="goalFilterTabs">
+    <button class="filter-tab active" data-filter="all">All Goals</button>
+    <button class="filter-tab" data-filter="on-track">On Track</button>
+    <button class="filter-tab" data-filter="at-risk">At Risk</button>
+    <button class="filter-tab" data-filter="completed">Completed</button>
+  </div>
+
+  <div class="row g-3" id="goalsGrid">
+
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="on-track">
+      <div class="goal-card">
+        <div class="goal-card-top"><span class="goal-icon">🏠</span><span class="status-badge on-track">On Track</span></div>
+        <h5 class="goal-title">Dream Home Down Payment</h5>
+        <p class="goal-desc">Save for a 20% down payment on a RM650,000 house</p>
+        <div class="progress goal-progress"><div class="progress-bar" style="width:68%"></div></div>
+        <p class="goal-amounts"><strong>RM 88,400</strong> <span>/ RM 130,000</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Dec 2030</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 1,800 / month</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="on-track">
+      <div class="goal-card">
+        <div class="goal-card-top"><span class="goal-icon">🏦</span><span class="status-badge on-track">On Track</span></div>
+        <h5 class="goal-title">Personal Savings Fund</h5>
+        <p class="goal-desc">A flexible goal for personal savings or miscellaneous expenses</p>
+        <div class="progress goal-progress"><div class="progress-bar" style="width:44%"></div></div>
+        <p class="goal-amounts"><strong>RM 44,000</strong> <span>/ RM 100,000</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Sep 2031</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 1,200 / month</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="at-risk">
+      <div class="goal-card">
+        <div class="goal-card-top"><span class="goal-icon">🚨</span><span class="status-badge at-risk">At Risk</span></div>
+        <h5 class="goal-title">Emergency Fund</h5>
+        <p class="goal-desc">Save 3–6 months of expenses for emergencies</p>
+        <div class="progress goal-progress"><div class="progress-bar" style="width:55%"></div></div>
+        <p class="goal-amounts"><strong>RM 16,500</strong> <span>/ RM 30,000</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Jun 2027</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 375 / month</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="on-track">
+      <div class="goal-card">
+        <div class="goal-card-top"><span class="goal-icon">✈️</span><span class="status-badge on-track">On Track</span></div>
+        <h5 class="goal-title">Travel Fund</h5>
+        <p class="goal-desc">Save for a trip to Korea, including flights and accommodation</p>
+        <div class="progress goal-progress"><div class="progress-bar" style="width:82%"></div></div>
+        <p class="goal-amounts"><strong>RM 16,400</strong> <span>/ RM 20,000</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Aug 2027</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 600 / month</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="at-risk">
+      <div class="goal-card">
+        <div class="goal-card-top"><span class="goal-icon">⛱️</span><span class="status-badge high-risk">High Risk</span></div>
+        <h5 class="goal-title">Early Retirement Fund</h5>
+        <p class="goal-desc">Financial independence by age 51 — retire comfortably</p>
+        <div class="progress goal-progress"><div class="progress-bar" style="width:21%"></div></div>
+        <p class="goal-amounts"><strong>RM 210,000</strong> <span>/ RM 1,000,000</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Target: Mar 2055</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 2,100 / month</span>
+        </div>
+        <button class="btn-ai-advisory mt-3" data-bs-toggle="modal" data-bs-target="#aiAdvisoryModal">
+          <i class="bi bi-stars"></i> AI Advisory
+        </button>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="completed">
+      <div class="goal-card completed-card">
+        <div class="goal-card-top"><span class="goal-icon">✈️</span><span class="status-badge completed">Completed</span></div>
+        <h5 class="goal-title">Japan Travel Fund</h5>
+        <p class="goal-desc">Save for a trip to Japan, including flights and accommodation</p>
+        <div class="progress goal-progress"><div class="progress-bar progress-bar-completed" style="width:100%"></div></div>
+        <p class="goal-amounts"><strong>RM 5,500</strong> <span>/ RM 5,500</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Completed: Dec 2024</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 500 / month</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="completed">
+      <div class="goal-card completed-card">
+        <div class="goal-card-top"><span class="goal-icon">📦</span><span class="status-badge completed">Completed</span></div>
+        <h5 class="goal-title">Laptop Upgrade Fund</h5>
+        <p class="goal-desc">A dedicated goal for saving towards a new laptop or device upgrade.</p>
+        <div class="progress goal-progress"><div class="progress-bar progress-bar-completed" style="width:100%"></div></div>
+        <p class="goal-amounts"><strong>RM 4,000</strong> <span>/ RM 4,000</span></p>
+        <div class="goal-meta">
+          <div class="meta-row"><span><i class="bi bi-calendar3"></i> Completed: Aug 2025</span><div class="goal-actions"><button class="action-btn"><i class="bi bi-pencil-square"></i></button><button class="action-btn delete-btn"><i class="bi bi-trash3"></i></button></div></div>
+          <span class="meta-monthly"><i class="bi bi-coin"></i> RM 250 / month</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4 goal-card-wrapper" data-status="create">
+      <div class="goal-card create-goal-card" data-bs-toggle="modal" data-bs-target="#createGoalModal">
+        <div class="create-goal-inner">
+          <div class="create-plus"><i class="bi bi-plus-lg"></i></div>
+          <p class="create-title">Create New Goal</p>
+          <p class="create-sub">Track savings, investments &amp; milestones</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     INVESTMENTS SECTION
+══════════════════════════════════════ -->
+<section id="investments-section" class="app-section">
+  <div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <h1 class="page-title">Investments</h1>
+    <div class="d-flex gap-3 align-items-center">
+      <div class="search-box"><i class="bi bi-search search-icon"></i><input type="text" placeholder="Search goals, funds…" /></div>
+      <button class="btn-primary-action"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+    </div>
+  </div>
+
+  <div class="inv-container">
+    <h2 class="inv-main-title">Choose Your Risk Profile</h2>
+    <p class="inv-main-sub">Choose a risk level based on your goals and time horizon.</p>
+
+    <div class="risk-tabs mb-4" id="riskTabs">
+      <button class="risk-tab active" data-risk="conservative">Conservative</button>
+      <button class="risk-tab" data-risk="balanced">Balanced</button>
+      <button class="risk-tab" data-risk="aggressive">Aggressive</button>
+    </div>
+
+    <div id="riskContent"></div>
+
+    <div class="d-flex justify-content-end mt-4">
+      <button class="btn-primary-action px-5" id="applyPortfolioBtn">Apply this portfolio</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     ROI SECTION
+══════════════════════════════════════ -->
+<section id="roi-section" class="app-section">
+  <div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <h1 class="page-title">ROI Calculator</h1>
+    <div class="roi-mode-toggle" id="roiModeToggle">
+      <button class="roi-mode-btn active" data-mode="compound"><span class="mode-dot compound-dot"></span> Compound</button>
+      <span class="roi-divider-pipe">|</span>
+      <button class="roi-mode-btn" data-mode="simple">Simple <span class="mode-dot simple-dot"></span></button>
+    </div>
+  </div>
+
+  <div class="mode-banner compound-banner mb-4" id="modeBanner">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong id="modeBannerStrong">Compound mode active</strong><span id="modeBannerText"> — interest is reinvested each month and added to your balance.</span>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-5">
+      <div class="roi-card">
+        <div class="roi-card-header">
+          <span class="roi-card-label">PARAMETERS</span>
+          <span class="roi-mode-badge" id="paramBadge">Compound</span>
+        </div>
+
+        <div class="roi-field">
+          <div class="roi-field-header"><label>Initial Investment</label><span class="roi-field-tag">One-time</span></div>
+          <div class="roi-input-group">
+            <span class="roi-prefix">RM</span><span class="roi-sep">|</span>
+            <input type="number" id="roiPrincipal" class="roi-input" value="10000" min="0" />
+          </div>
+        </div>
+
+        <div class="roi-field" id="monthlyField">
+          <div class="roi-field-header">
+            <label>Monthly Contribution</label>
+            <span class="roi-field-tag" id="monthlyTag">Per month</span>
+          </div>
+          <div class="roi-input-group">
+            <span class="roi-prefix">RM</span><span class="roi-sep">|</span>
+            <input type="number" id="roiMonthly" class="roi-input" value="200" min="0" />
+          </div>
+        </div>
+
+        <div class="roi-field">
+          <div class="roi-field-header"><label>Annual Interest Rate</label></div>
+          <div class="roi-input-group">
+            <input type="number" id="roiRate" class="roi-input text-end" value="7.0" step="0.5" min="0" max="100" />
+            <span class="roi-sep">|</span><span class="roi-suffix">%</span>
+          </div>
+          <div class="roi-quick-btns mt-2">
+            <button class="quick-btn" data-val="3" data-target="roiRate">3%</button>
+            <button class="quick-btn" data-val="5" data-target="roiRate">5%</button>
+            <button class="quick-btn active" data-val="7" data-target="roiRate">7%</button>
+            <button class="quick-btn" data-val="9" data-target="roiRate">9%</button>
+            <button class="quick-btn" data-val="12" data-target="roiRate">12%</button>
+          </div>
+        </div>
+
+        <div class="roi-hr"></div>
+
+        <div class="roi-field">
+          <div class="roi-field-header"><label>Duration</label></div>
+          <div class="roi-input-group">
+            <button class="roi-stepper" id="durationMinus">−</button>
+            <span class="roi-sep">|</span>
+            <input type="number" id="roiDuration" class="roi-input text-center" value="10" min="1" max="50" />
+            <span class="roi-dur-label">years</span>
+            <span class="roi-sep">|</span>
+            <button class="roi-stepper" id="durationPlus">+</button>
+          </div>
+          <div class="roi-quick-btns mt-2">
+            <button class="quick-btn" data-val="3" data-target="roiDuration">3yr</button>
+            <button class="quick-btn" data-val="5" data-target="roiDuration">5yr</button>
+            <button class="quick-btn active" data-val="10" data-target="roiDuration">10yr</button>
+            <button class="quick-btn" data-val="20" data-target="roiDuration">20yr</button>
+          </div>
+        </div>
+
+        <button class="btn-calculate mt-4" id="calculateBtn">
+          <span id="calcBtnText">Calculate (Compound)</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+      <div class="roi-card mb-4" id="resultsPanel" style="display:none">
+        <div class="roi-card-header mb-3">
+          <span class="roi-card-label">RESULTS</span>
+          <span class="roi-mode-badge" id="resultBadge">Compound</span>
+        </div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6">
+            <div class="result-stat-card">
+              <p class="result-stat-label">TOTAL INVESTED<br><small id="investedFormula" class="text-muted">P + (PMT × 120)</small></p>
+              <h3 class="result-stat-value" id="totalInvested">—</h3>
+              <div class="result-divider"></div>
+              <p class="result-stat-label">TOTAL RETURN<br><small id="returnFormula" class="text-muted">Future value (FV)</small></p>
+              <h3 class="result-stat-value" id="totalReturn">—</h3>
+              <div class="result-divider"></div>
+              <p class="result-stat-label">TOTAL PROFIT<br><small class="text-success" id="profitGain">—</small></p>
+              <h3 class="result-stat-value profit-value" id="totalProfit">—</h3>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="result-chart-placeholder">
+              <canvas id="growthChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="compound-hint mt-3" id="compoundHint" style="display:none">
+          <i class="bi bi-arrow-left-right me-2"></i>
+          <span id="compoundHintText"></span>
+          <a href="#" class="hint-link ms-1" id="switchModeLink">Switch to Compound</a>
+        </div>
+      </div>
+
+      <div class="roi-card" id="scenarioPanel" style="display:none">
+        <div class="roi-card-header mb-3">
+          <span class="roi-card-label">SCENARIO COMPARISON</span>
+          <span class="roi-mode-badge" id="scenarioBadge">Compound</span>
+        </div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6">
+            <div class="scenario-header">
+              <span class="scenario-rate-label">RATE A</span>
+              <div class="roi-input-group mini">
+                <input type="number" id="rateA" class="roi-input text-end" value="5.0" step="0.5" />
+                <span class="roi-sep">|</span><span class="roi-suffix">%</span>
+              </div>
+            </div>
+            <div class="scenario-card">
+              <div class="scenario-card-top"><span>Scenario A</span><span class="scenario-badge neutral" id="scenarioABadge">5%</span></div>
+              <div class="scenario-row"><span>Total Invested</span><strong id="saTotalInvested">—</strong></div>
+              <div class="scenario-row"><span>Total Return</span><strong id="saTotalReturn">—</strong></div>
+              <div class="scenario-row"><span>Profit</span><strong class="text-success" id="saProfit">—</strong></div>
+              <div class="scenario-row"><span>Gain</span><strong id="saGain">—</strong></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="scenario-header">
+              <span class="scenario-rate-label">RATE B</span>
+              <div class="roi-input-group mini">
+                <input type="number" id="rateB" class="roi-input text-end" value="8.0" step="0.5" />
+                <span class="roi-sep">|</span><span class="roi-suffix">%</span>
+              </div>
+            </div>
+            <div class="scenario-card best-scenario">
+              <div class="scenario-card-top"><span>Scenario B</span><span class="scenario-badge best" id="scenarioBBadge">8%</span></div>
+              <div class="scenario-row"><span>Total Invested</span><strong id="sbTotalInvested">—</strong></div>
+              <div class="scenario-row"><span>Total Return</span><strong class="text-success" id="sbTotalReturn">—</strong></div>
+              <div class="scenario-row">
+                <span>Profit</span>
+                <span><strong class="text-success" id="sbProfit">—</strong> <span class="profit-delta" id="sbProfitDelta"></span></span>
+              </div>
+              <div class="scenario-row">
+                <span>Gain</span>
+                <span><strong class="text-success" id="sbGain">—</strong> <span class="best-dot">● BEST</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- MODAL: CREATE GOAL -->
+<div class="modal fade" id="createGoalModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-custom">
+      <div class="modal-body p-4">
+        <h4 class="modal-main-title">Create New Goal</h4>
+        <p class="modal-main-sub">Define your financial goal and start tracking your progress.</p>
+
+        <div class="modal-field"><label class="modal-label">Goal Name</label>
+          <input type="text" class="modal-input-field" id="cgName" placeholder="e.g. Dream Vacation Fund" /></div>
+        <div class="modal-field"><label class="modal-label">Description</label>
+          <input type="text" class="modal-input-field" id="cgDesc" placeholder="Brief description of this goal" /></div>
+        <div class="row g-3">
+          <div class="col-6"><div class="modal-field"><label class="modal-label">Target Amount</label>
+            <input type="text" class="modal-input-field" id="cgTarget" placeholder="RM50,000" /></div></div>
+          <div class="col-6"><div class="modal-field"><label class="modal-label">Current Savings</label>
+            <input type="text" class="modal-input-field" id="cgSavings" placeholder="RM0" /></div></div>
+        </div>
+        <div class="modal-field"><label class="modal-label">Monthly Distribution</label>
+          <input type="text" class="modal-input-field" id="cgMonthly" placeholder="RM500" /></div>
+        <div class="row g-3">
+          <div class="col-6"><div class="modal-field"><label class="modal-label">Target Date</label>
+            <input type="month" class="modal-input-field" id="cgDate" /></div></div>
+          <div class="col-6"><div class="modal-field"><label class="modal-label">Category</label>
+            <div class="custom-select-wrapper" id="categoryWrapper">
+              <div class="custom-select-trigger" id="categoryTrigger">
+                <span id="categoryIcon">🏠</span>
+                <span id="categoryLabel">Home</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+              </div>
+              <div class="custom-select-dropdown" id="categoryDropdown">
+                <div class="custom-option selected" data-value="home" data-icon="🏠">🏠 Home</div>
+                <div class="custom-option" data-value="education" data-icon="🎓">🎓 Education</div>
+                <div class="custom-option" data-value="emergency" data-icon="🚨">🚨 Emergency</div>
+                <div class="custom-option" data-value="travel" data-icon="✈️">✈️ Travel</div>
+                <div class="custom-option" data-value="retirement" data-icon="⛱️">⛱️ Retirement</div>
+                <div class="custom-option" data-value="savings" data-icon="🏦">🏦 Savings</div>
+                <div class="custom-option" data-value="others" data-icon="📦">📦 Others</div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+
+        <div class="d-flex gap-3 mt-4">
+          <button class="btn-modal-cancel flex-fill" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn-modal-save flex-fill" id="saveGoalBtn">Save Goal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AI ADVISORY -->
+<div class="modal fade" id="aiAdvisoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:560px">
+    <div class="modal-content modal-custom p-0 overflow-hidden">
+      <div class="ai-modal-header">
+        <h5 class="ai-modal-subtitle">AI Advisory</h5>
+        <h3 class="ai-modal-fund">Early Retirement Fund</h3>
+        <div class="ai-stats-row">
+          <div class="ai-stat"><span class="ai-stat-label">Target</span><span class="ai-stat-val">RM 1,000,000</span></div>
+          <div class="ai-stat"><span class="ai-stat-label">Saved</span><span class="ai-stat-val">RM 210,000</span></div>
+          <div class="ai-stat"><span class="ai-stat-label">Monthly</span><span class="ai-stat-val">RM 2,100</span></div>
+          <div class="ai-stat"><span class="ai-stat-label">Deadline</span><span class="ai-stat-val">Mar 2055</span></div>
+          <div class="ai-stat"><span class="ai-stat-label">Lag</span><span class="ai-stat-val ai-lag">12% behind</span></div>
+        </div>
+      </div>
+      <div class="ai-modal-body p-4">
+        <p class="section-divider-label">TWO PATHS FORWARD</p>
+        <div class="row g-3 mb-4">
+          <div class="col-6">
+            <div class="ai-option-card" id="optionA" data-option="A">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="ai-opt-label-time">Option A – TIME</span>
+                <div class="ai-radio" id="radioA"></div>
+              </div>
+              <h2 class="ai-opt-big">+42 <span class="ai-opt-unit">months</span></h2>
+              <p class="ai-opt-desc">Keep saving RM 2,100/month and extend your deadline by 3 years 6 months</p>
+              <span class="ai-opt-tag">Retire by Sep 2058</span>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="ai-option-card" id="optionB" data-option="B">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="ai-opt-label-amount">Option B – AMOUNT</span>
+                <div class="ai-radio" id="radioB"></div>
+              </div>
+              <h2 class="ai-opt-big">+RM252<span class="ai-opt-unit">/mo</span></h2>
+              <p class="ai-opt-desc">Increase to RM 2,352/month and hit your original March 2055 goal</p>
+              <span class="ai-opt-tag green">Stay on track for 2055</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-divider-label">AI ADVISORY RESPONSE</p>
+        <div class="ai-response-box">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="ai-avatar"><i class="bi bi-star-fill"></i></div>
+              <div><p class="ai-name">AI Advisor</p><p class="ai-powered">Powered by Gemini · Smart Suggestions v3.4</p></div>
+            </div>
+            <span class="ai-generated-badge">AI Generated</span>
+          </div>          document.addEventListener('DOMContentLoaded', () => {
+            // Section switching
+            const navItems = document.querySelectorAll('.nav-item');
+            const sections = document.querySelectorAll('.app-section');
+            
+            navItems.forEach(item => {
+              item.addEventListener('click', () => {
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                
+                const sectionId = item.getAttribute('data-section') + '-section';
+                sections.forEach(sec => sec.classList.remove('active-section'));
+                document.getElementById(sectionId).classList.add('active-section');
+              });
+            });
+            
+            // ROI Calculator (basic compound interest example)
+            const calculateBtn = document.getElementById('calculateBtn');
+            calculateBtn.addEventListener('click', () => {
+              const principal = parseFloat(document.getElementById('roiPrincipal').value) || 0;
+              const monthly = parseFloat(document.getElementById('roiMonthly').value) || 0;
+              const rate = parseFloat(document.getElementById('roiRate').value) / 100 / 12;
+              const duration = parseInt(document.getElementById('roiDuration').value) * 12;
+              
+              let futureValue = principal;
+              for (let i = 0; i < duration; i++) {
+                futureValue = (futureValue + monthly) * (1 + rate);
+              }
+              const totalInvested = principal + (monthly * duration);
+              const totalProfit = futureValue - totalInvested;
+              
+              document.getElementById('totalInvested').textContent = `RM ${totalInvested.toLocaleString()}`;
+              document.getElementById('totalReturn').textContent = `RM ${futureValue.toLocaleString()}`;
+              document.getElementById('totalProfit').textContent = `RM ${totalProfit.toLocaleString()}`;
+              document.getElementById('resultsPanel').style.display = 'block';
+              
+              // Basic chart (requires Chart.js)
+              const ctx = document.getElementById('growthChart').getContext('2d');
+              new Chart(ctx, {
+                type: 'line',
+                data: { labels: ['Start', 'End'], datasets: [{ data: [principal, futureValue] }] }
+              });
+            });
+            
+            // Investments: Populate risk content (example for conservative)
+            const riskTabs = document.querySelectorAll('.risk-tab');
+            const riskContent = document.getElementById('riskContent');
+            
+            riskTabs.forEach(tab => {
+              tab.addEventListener('click', () => {
+                riskTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const risk = tab.getAttribute('data-risk');
+                riskContent.innerHTML = `<p>Content for ${risk} risk profile loaded.</p>`; // Replace with actual data
+              });
+            });
+          });
+          <p class="ai-response-text">
+            You're already <strong>RM 210,000</strong> into your retirement journey — that's a real foundation to build on. If your monthly savings stay at <strong>RM 2,100</strong>, you'd reach your goal by <span class="ai-highlight-blue">Sep 2058</span> — about 3 years and 6 months later than planned. Alternatively, adding just <span class="ai-highlight-green">+RM 252/month</span> (total RM 2,352/month) keeps your original March 2055 retirement fully intact.
+          </p>
+          <div class="ai-tip-box">
+            <span class="ai-tip-icon">💡</span>
+            <p class="ai-tip-text">Automating your monthly transfer to a separate investment account removes the temptation to skip — consistency compounds faster than any single large contribution.</p>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4 flex-wrap">
+          <button class="btn-ai-regen"><i class="bi bi-arrow-clockwise"></i> Regenerate</button>
+          <button class="btn-ai-dismiss" data-bs-dismiss="modal">Dismiss</button>
+          <button class="btn-ai-apply ms-auto" id="applyOptionBtn" disabled>Apply Selected Option</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
