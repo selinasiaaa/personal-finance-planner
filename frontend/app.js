@@ -481,7 +481,8 @@ function initInvestmentsPage() {
 
   function renderGoalOptions() {
     if (!goalOptionsList) return;
-    goalOptionsList.innerHTML = GOALS_LIST.map(goal => `
+    const availableGoals = GOALS_LIST.filter(goal => goal.status !== 'completed');
+    goalOptionsList.innerHTML = availableGoals.map(goal => `
       <label class="goal-select-card ${selectedGoalId === goal.id ? 'selected' : ''}" for="goal-${goal.id}">
         <input type="radio" id="goal-${goal.id}" name="selectedGoal" class="goal-select-input" value="${goal.id}" ${selectedGoalId === goal.id ? 'checked' : ''} />
         <span class="goal-select-radio"></span>
