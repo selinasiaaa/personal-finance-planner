@@ -39,6 +39,19 @@ body {
   min-height: 100vh;
 }
 
+body[data-page="login"],
+body[data-page="register"],
+body[data-page="forgot-password"] {
+  display: block;
+}
+
+body[data-page="login"] .main-content,
+body[data-page="register"] .main-content,
+body[data-page="forgot-password"] .main-content {
+  margin-left: 0;
+  width: 100%;
+}
+
 /* ═══ SCROLLBAR ═══ */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -798,4 +811,111 @@ body {
 
 .auth-footer a:hover {
   text-decoration: underline;
+}
+
+.summary-purple { border-color: #a78bfa; }
+
+.page-subtitle {
+  font-size: .88rem;
+  color: var(--text-mid);
+  margin: 4px 0 0;
+}
+
+.insight-card {
+  background: var(--bg-white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  height: 100%;
+}
+
+.insight-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-title-sm {
+  font-family: var(--font-h);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.insight-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: var(--blue-light);
+  color: var(--blue);
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.insight-list {
+  display: grid;
+  gap: 10px;
+}
+
+.insight-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: #f8faff;
+}
+
+.insight-label {
+  color: var(--text-mid);
+  font-size: .84rem;
+}
+
+.insight-value {
+  color: var(--text-dark);
+  font-size: .84rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.insight-bullets {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-mid);
+}
+
+.insight-bullets li {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.sidebar-logout {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid #fee2e2;
+  background: #fff5f5;
+  color: var(--red);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  font-family: var(--font-b);
+  font-size: .84rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background var(--T), color var(--T), transform var(--T);
+}
+
+.sidebar-logout:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  transform: translateY(-1px);
 }

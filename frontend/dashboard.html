@@ -12,38 +12,89 @@
 <body data-page="dashboard">
   <main class="main-content" id="mainContent">
     <section id="dashboard-section" class="app-section active-section">
-      <div class="page-header d-flex align-items-center justify-content-between mb-4">
-        <h1 class="page-title">Market Insights Dashboard</h1>
+      <div class="page-header d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+          <h1 class="page-title">Market Insights Dashboard</h1>
+          <p class="page-subtitle">Live overview powered by the market insights API for trend, performance, and portfolio risk.</p>
+        </div>
+        <button type="button" class="btn-primary-action" id="refreshInsightsBtn">
+          <i class="bi bi-arrow-clockwise"></i> Refresh Insights
+        </button>
       </div>
+
+      <div class="alert-banner mb-4">
+        <i class="bi bi-activity me-2"></i>
+        <span><strong>Live market summary.</strong> Review the latest sentiment and risk outlook before adjusting your portfolio.</span>
+      </div>
+
       <div class="row g-3 mb-4">
         <div class="col-md-4">
           <div class="summary-card summary-blue">
             <p class="summary-label">Market Trend</p>
-            <h2 class="summary-value">Bullish</h2>
-            <p class="summary-sub">S&P 500 up 2.5%</p>
+            <h2 class="summary-value" id="trendValue">Loading...</h2>
+            <p class="summary-sub" id="sp500Value">Connecting to API...</p>
           </div>
         </div>
         <div class="col-md-4">
           <div class="summary-card summary-green">
             <p class="summary-label">Top Performer</p>
-            <h2 class="summary-value">Tech Stocks</h2>
-            <p class="summary-sub">+15% this month</p>
+            <h2 class="summary-value" id="topPerformerValue">Loading...</h2>
+            <p class="summary-sub" id="performanceValue">Checking performance...</p>
           </div>
         </div>
         <div class="col-md-4">
           <div class="summary-card summary-orange">
             <p class="summary-label">Risk Level</p>
-            <h2 class="summary-value">Moderate</h2>
-            <p class="summary-sub">Balanced portfolio</p>
+            <h2 class="summary-value" id="riskLevelValue">Loading...</h2>
+            <p class="summary-sub" id="riskSummaryText">Preparing the latest outlook...</p>
           </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h5>Market Data</h5>
+
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="insight-card">
+            <div class="insight-card-head">
+              <div>
+                <p class="summary-label mb-1">MARKET SNAPSHOT</p>
+                <h3 class="section-title-sm mb-0">API-driven summary</h3>
+              </div>
+              <span class="insight-pill" id="riskBadgeText">Loading...</span>
+            </div>
+            <div class="insight-list">
+              <div class="insight-row">
+                <span class="insight-label">Trend signal</span>
+                <strong class="insight-value" id="marketTrendText">Loading...</strong>
+              </div>
+              <div class="insight-row">
+                <span class="insight-label">Top performing segment</span>
+                <strong class="insight-value" id="marketTopPerformerText">Loading...</strong>
+              </div>
+              <div class="insight-row">
+                <span class="insight-label">Performance reading</span>
+                <strong class="insight-value" id="marketPerformanceText">Loading...</strong>
+              </div>
+              <div class="insight-row">
+                <span class="insight-label">Last updated</span>
+                <strong class="insight-value" id="insightUpdatedAt">Waiting for API...</strong>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <p>Market insights content here. Connect to API for real data.</p>
+        <div class="col-lg-5">
+          <div class="insight-card">
+            <div class="insight-card-head">
+              <div>
+                <p class="summary-label mb-1">NEXT ACTIONS</p>
+                <h3 class="section-title-sm mb-0">What to review</h3>
+              </div>
+            </div>
+            <ul class="insight-bullets">
+              <li>Use the trend signal to decide whether to stay aggressive or move more defensively.</li>
+              <li>Compare the top performer with your current portfolio allocation.</li>
+              <li>Review your risk level before applying a new investment portfolio to any goal.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>

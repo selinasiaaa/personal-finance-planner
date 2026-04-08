@@ -25,13 +25,73 @@ function initNavigation(page) {
 }
 
 let editingCard = null;
+const API_BASE = 'http://localhost:3001';
+
+function getStoredUser() {
+  try {
+    return JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function setStoredUser(user, remember = true) {
+  const serialized = JSON.stringify(user);
+  if (remember) {
+    localStorage.setItem('user', serialized);
+    sessionStorage.removeItem('user');
+  } else {
+    sessionStorage.setItem('user', serialized);
+    localStorage.removeItem('user');
+  }
+}
+
+function clearStoredUser() {
+  localStorage.removeItem('user');
+  sessionStorage.removeItem('user');
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isStrongPassword(password) {
+  return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password);
+}
+
+async function apiRequest(path, options = {}) {
+  const config = {
+    ...options,
+    headers: {
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {}),
+    },
+  };
+
+  const response = await fetch(`${API_BASE}${path}`, config);
+  const contentType = response.headers.get('content-type') || '';
+  const data = contentType.includes('application/json') ? await response.json() : null;
+
+  if (!response.ok) {
+    throw new Error(data?.message || 'Request failed.');
+  }
+
+  return data;
+}
+
+function requireAuthenticatedUser() {
+  const user = getStoredUser();
+  if (!user?.email) {
+    window.location.href = 'login.html';
+    return null;
+  }
+  return user;
+}
 
 function initGoalsPage() {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  if (!user) {
-    document.getElementById('goals-section').style.display = 'none';
-    document.getElementById('login-section').style.display = 'block';
-    initMainLogin();
+  const user = getStoredUser();
+  if (!user?.email) {
+    window.location.href = 'login.html';
     return;
   }
   // Proceed with goals if logged in
@@ -324,6 +384,9 @@ function esc(str) {
 }
 
 function initInvestmentsPage() {
+  const user = requireAuthenticatedUser();
+  if (!user) return;
+
   const RISK_DATA = {
     conservative: {
       bannerGrad: 'linear-gradient(135deg, #2e7d32, #4caf50)',
@@ -603,6 +666,9 @@ function initInvestmentsPage() {
 }
 
 function initRoiPage() {
+  const user = requireAuthenticatedUser();
+  if (!user) return;
+
   let roiMode = 'compound';
   let growthChart = null;
   const modeBanner = document.getElementById('modeBanner');
@@ -810,72 +876,90 @@ function initRoiPage() {
 
 // User Management Functions
 function initLoginPage() {
+  if (getStoredUser()?.email) {
+    window.location.href = 'index.html';
+    return;
+  }
+
   const form = document.getElementById('loginForm');
   if (!form) return;
-  form.addEventListener('submit', async (e) => {
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    // Validate input
-    if (!email || !password) {
-      alert('Please fill in all fields.');
+    const rememberMe = document.getElementById('rememberMe')?.checked ?? true;
+
+    if (!isValidEmail(email)) {
+      alert('Please enter a valid email address.');
       return;
     }
-    // Connect to Backend C API
+
+    if (!password) {
+      alert('Please enter your password.');
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:3001/api/login', {
+      const user = await apiRequest('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      if (response.ok) {
-        const user = await response.json();
-        localStorage.setItem('user', JSON.stringify(user));
-        window.location.href = 'index.html'; // Redirect to goals
-      } else {
-        alert('Invalid credentials.');
-      }
+      setStoredUser(user, rememberMe);
+      window.location.href = 'index.html';
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed. Please try again.');
+      alert(error.message || 'Login failed. Please try again.');
     }
   });
 }
 
 function initRegisterPage() {
+  if (getStoredUser()?.email) {
+    window.location.href = 'index.html';
+    return;
+  }
+
   const form = document.getElementById('registerForm');
   if (!form) return;
-  form.addEventListener('submit', async (e) => {
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    // Validate
+
+    if (!name) {
+      alert('Please enter your full name.');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    if (!isStrongPassword(password)) {
+      alert('Password must be at least 8 characters and include a letter and a number.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       alert('Passwords do not match.');
       return;
     }
-    if (password.length < 8) {
-      alert('Password must be at least 8 characters.');
-      return;
-    }
-    // Connect to Backend C API
+
     try {
-      const response = await fetch('http://localhost:3001/api/register', {
+      await apiRequest('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
       });
-      if (response.ok) {
-        alert('Registration successful. Please log in.');
-        window.location.href = 'login.html';
-      } else {
-        alert('Registration failed.');
-      }
+      alert('Registration successful. You can sign in now.');
+      window.location.href = 'login.html';
     } catch (error) {
       console.error('Register error:', error);
-      alert('Registration failed. Please try again.');
+      alert(error.message || 'Registration failed. Please try again.');
     }
   });
 }
@@ -883,35 +967,33 @@ function initRegisterPage() {
 function initForgotPasswordPage() {
   const form = document.getElementById('forgotPasswordForm');
   if (!form) return;
-  form.addEventListener('submit', async (e) => {
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const email = document.getElementById('email').value;
-    // Connect to Backend C API
+    const email = document.getElementById('email').value.trim();
+
+    if (!isValidEmail(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:3001/api/forgot-password', {
+      const data = await apiRequest('/api/forgot-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-      if (response.ok) {
-        alert('Reset link sent to your email.');
-      } else {
-        alert('Failed to send reset link.');
-      }
+      alert(data?.message || 'Reset link sent to your email.');
     } catch (error) {
       console.error('Forgot password error:', error);
-      alert('Failed to send reset link.');
+      alert(error.message || 'Failed to send reset link.');
     }
   });
 }
 
 function initProfilePage() {
-  // Load user data
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!user.email) {
-    window.location.href = 'login.html';
-    return;
-  }
+  const user = requireAuthenticatedUser();
+  if (!user) return;
+
   document.getElementById('profileName').value = user.name || '';
   document.getElementById('profileEmail').value = user.email || '';
   document.getElementById('profilePhone').value = user.phone || '';
@@ -922,98 +1004,151 @@ function initProfilePage() {
   document.getElementById('profileCountry').value = user.country || '';
 
   const form = document.getElementById('profileForm');
-  form.addEventListener('submit', async (e) => {
+  if (!form) return;
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const name = document.getElementById('profileName').value;
-    const email = document.getElementById('profileEmail').value;
-    const phone = document.getElementById('profilePhone').value;
-    const dob = document.getElementById('profileDOB').value;
-    const occupation = document.getElementById('profileOccupation').value;
-    const address = document.getElementById('profileAddress').value;
-    const city = document.getElementById('profileCity').value;
-    const country = document.getElementById('profileCountry').value;
-    // Update via API
+
+    const payload = {
+      name: document.getElementById('profileName').value.trim(),
+      email: document.getElementById('profileEmail').value.trim(),
+      phone: document.getElementById('profilePhone').value.trim(),
+      dob: document.getElementById('profileDOB').value,
+      occupation: document.getElementById('profileOccupation').value.trim(),
+      address: document.getElementById('profileAddress').value.trim(),
+      city: document.getElementById('profileCity').value.trim(),
+      country: document.getElementById('profileCountry').value.trim(),
+    };
+
+    if (!payload.name) {
+      alert('Name is required.');
+      return;
+    }
+
+    if (!isValidEmail(payload.email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:3001/api/profile', {
+      const updatedUser = await apiRequest('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, dob, occupation, address, city, country })
+        body: JSON.stringify(payload)
       });
-      if (response.ok) {
-        const updatedUser = await response.json();
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        alert('Profile updated successfully!');
-      } else {
-        alert('Update failed.');
-      }
+      const rememberSession = Boolean(localStorage.getItem('user'));
+      setStoredUser({ ...user, ...updatedUser }, rememberSession);
+      alert('Profile updated successfully!');
     } catch (error) {
       console.error('Update error:', error);
-      alert('Update failed.');
+      alert(error.message || 'Update failed.');
     }
   });
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    localStorage.removeItem('user');
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    clearStoredUser();
     window.location.href = 'login.html';
   });
 
-  document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      try {
-        const response = await fetch('http://localhost:3001/api/profile', { method: 'DELETE' });
-        if (response.ok) {
-          localStorage.removeItem('user');
-          window.location.href = 'register.html';
-        } else {
-          alert('Delete failed.');
-        }
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('Delete failed.');
-      }
+  document.getElementById('changePasswordBtn')?.addEventListener('click', () => {
+    window.location.href = 'forgot-password.html';
+  });
+
+  document.getElementById('deleteAccountBtn')?.addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await apiRequest('/api/profile', { method: 'DELETE' });
+      clearStoredUser();
+      window.location.href = 'register.html';
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert(error.message || 'Delete failed.');
     }
   });
 }
 
 function initDashboardPage() {
-  // Load market insights from Backend F API
-  fetch('http://localhost:3001/api/market-insights')
-    .then(response => response.json())
-    .then(data => {
-      // Update dashboard with data
-      console.log('Market data:', data);
-    })
-    .catch(error => console.error('Dashboard error:', error));
+  const user = requireAuthenticatedUser();
+  if (!user) return;
+
+  const refreshBtn = document.getElementById('refreshInsightsBtn');
+
+  async function loadInsights() {
+    if (refreshBtn) {
+      refreshBtn.disabled = true;
+      refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refreshing...';
+    }
+
+    try {
+      const data = await apiRequest('/api/market-insights');
+      document.getElementById('trendValue').textContent = data.trend || 'N/A';
+      document.getElementById('sp500Value').textContent = `S&P 500 ${data.sp500 || '—'}`;
+      document.getElementById('topPerformerValue').textContent = data.topPerformer || 'N/A';
+      document.getElementById('performanceValue').textContent = data.performance || '—';
+      document.getElementById('riskLevelValue').textContent = data.riskLevel || 'N/A';
+      document.getElementById('riskSummaryText').textContent = `${data.riskLevel || 'Moderate'} market risk outlook`;
+      document.getElementById('marketTrendText').textContent = data.trend || 'N/A';
+      document.getElementById('marketTopPerformerText').textContent = data.topPerformer || 'N/A';
+      document.getElementById('marketPerformanceText').textContent = data.performance || '—';
+      document.getElementById('riskBadgeText').textContent = `${data.riskLevel || 'Moderate'} Risk`;
+      document.getElementById('insightUpdatedAt').textContent = new Date().toLocaleString();
+    } catch (error) {
+      console.error('Dashboard error:', error);
+      document.getElementById('trendValue').textContent = 'Unavailable';
+      document.getElementById('sp500Value').textContent = 'API offline';
+      document.getElementById('topPerformerValue').textContent = 'Unavailable';
+      document.getElementById('performanceValue').textContent = '—';
+      document.getElementById('riskLevelValue').textContent = 'Unavailable';
+      document.getElementById('riskSummaryText').textContent = 'Unable to load market insights right now.';
+      document.getElementById('marketTrendText').textContent = 'Unavailable';
+      document.getElementById('marketTopPerformerText').textContent = 'Unavailable';
+      document.getElementById('marketPerformanceText').textContent = '—';
+      document.getElementById('riskBadgeText').textContent = 'API Offline';
+      document.getElementById('insightUpdatedAt').textContent = 'Request failed';
+    } finally {
+      if (refreshBtn) {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh Insights';
+      }
+    }
+  }
+
+  refreshBtn?.addEventListener('click', loadInsights);
+  loadInsights();
 }
 
 function initMainLogin() {
   const form = document.getElementById('mainLoginForm');
   if (!form) return;
-  form.addEventListener('submit', async (e) => {
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const email = document.getElementById('mainEmail').value;
+    const email = document.getElementById('mainEmail').value.trim();
     const password = document.getElementById('mainPassword').value;
-    if (!email || !password) {
+    const rememberMe = document.getElementById('mainRememberMe')?.checked ?? true;
+
+    if (!isValidEmail(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    if (!password) {
       alert('Please fill in all fields.');
       return;
     }
+
     try {
-      const response = await fetch('http://localhost:3001/api/login', {
+      const user = await apiRequest('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      if (response.ok) {
-        const user = await response.json();
-        localStorage.setItem('user', JSON.stringify(user));
-        // Reload to show goals
-        window.location.reload();
-      } else {
-        alert('Invalid credentials.');
-      }
+      setStoredUser(user, rememberMe);
+      window.location.reload();
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed. Please try again.');
+      alert(error.message || 'Login failed. Please try again.');
     }
   });
 }
