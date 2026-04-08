@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (page === 'goals') initGoalsPage();
   if (page === 'investments') initInvestmentsPage();
   if (page === 'roi') initRoiPage();
+  if (page === 'login') initLoginPage();
+  if (page === 'register') initRegisterPage();
+  if (page === 'forgot-password') initForgotPasswordPage();
+  if (page === 'profile') initProfilePage();
+  if (page === 'dashboard') initDashboardPage();
 });
 
 function initNavigation(page) {
@@ -22,6 +27,14 @@ function initNavigation(page) {
 let editingCard = null;
 
 function initGoalsPage() {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!user) {
+    document.getElementById('goals-section').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
+    initMainLogin();
+    return;
+  }
+  // Proceed with goals if logged in
   const filterTabs = document.querySelectorAll('#goalFilterTabs .filter-tab');
   const goalsGrid = document.getElementById('goalsGrid');
 
@@ -793,4 +806,214 @@ function initRoiPage() {
     });
   });
   updateRoiModeUI();
+}
+
+// User Management Functions
+function initLoginPage() {
+  const form = document.getElementById('loginForm');
+  if (!form) return;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    // Validate input
+    if (!email || !password) {
+      alert('Please fill in all fields.');
+      return;
+    }
+    // Connect to Backend C API
+    try {
+      const response = await fetch('http://localhost:3001/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      if (response.ok) {
+        const user = await response.json();
+        localStorage.setItem('user', JSON.stringify(user));
+        window.location.href = 'index.html'; // Redirect to goals
+      } else {
+        alert('Invalid credentials.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed. Please try again.');
+    }
+  });
+}
+
+function initRegisterPage() {
+  const form = document.getElementById('registerForm');
+  if (!form) return;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    // Validate
+    if (password !== confirmPassword) {
+      alert('Passwords do not match.');
+      return;
+    }
+    if (password.length < 8) {
+      alert('Password must be at least 8 characters.');
+      return;
+    }
+    // Connect to Backend C API
+    try {
+      const response = await fetch('http://localhost:3001/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      if (response.ok) {
+        alert('Registration successful. Please log in.');
+        window.location.href = 'login.html';
+      } else {
+        alert('Registration failed.');
+      }
+    } catch (error) {
+      console.error('Register error:', error);
+      alert('Registration failed. Please try again.');
+    }
+  });
+}
+
+function initForgotPasswordPage() {
+  const form = document.getElementById('forgotPasswordForm');
+  if (!form) return;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    // Connect to Backend C API
+    try {
+      const response = await fetch('http://localhost:3001/api/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (response.ok) {
+        alert('Reset link sent to your email.');
+      } else {
+        alert('Failed to send reset link.');
+      }
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      alert('Failed to send reset link.');
+    }
+  });
+}
+
+function initProfilePage() {
+  // Load user data
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!user.email) {
+    window.location.href = 'login.html';
+    return;
+  }
+  document.getElementById('profileName').value = user.name || '';
+  document.getElementById('profileEmail').value = user.email || '';
+  document.getElementById('profilePhone').value = user.phone || '';
+  document.getElementById('profileDOB').value = user.dob || '';
+  document.getElementById('profileOccupation').value = user.occupation || '';
+  document.getElementById('profileAddress').value = user.address || '';
+  document.getElementById('profileCity').value = user.city || '';
+  document.getElementById('profileCountry').value = user.country || '';
+
+  const form = document.getElementById('profileForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('profileName').value;
+    const email = document.getElementById('profileEmail').value;
+    const phone = document.getElementById('profilePhone').value;
+    const dob = document.getElementById('profileDOB').value;
+    const occupation = document.getElementById('profileOccupation').value;
+    const address = document.getElementById('profileAddress').value;
+    const city = document.getElementById('profileCity').value;
+    const country = document.getElementById('profileCountry').value;
+    // Update via API
+    try {
+      const response = await fetch('http://localhost:3001/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone, dob, occupation, address, city, country })
+      });
+      if (response.ok) {
+        const updatedUser = await response.json();
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        alert('Profile updated successfully!');
+      } else {
+        alert('Update failed.');
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('Update failed.');
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+  });
+
+  document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      try {
+        const response = await fetch('http://localhost:3001/api/profile', { method: 'DELETE' });
+        if (response.ok) {
+          localStorage.removeItem('user');
+          window.location.href = 'register.html';
+        } else {
+          alert('Delete failed.');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Delete failed.');
+      }
+    }
+  });
+}
+
+function initDashboardPage() {
+  // Load market insights from Backend F API
+  fetch('http://localhost:3001/api/market-insights')
+    .then(response => response.json())
+    .then(data => {
+      // Update dashboard with data
+      console.log('Market data:', data);
+    })
+    .catch(error => console.error('Dashboard error:', error));
+}
+
+function initMainLogin() {
+  const form = document.getElementById('mainLoginForm');
+  if (!form) return;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('mainEmail').value;
+    const password = document.getElementById('mainPassword').value;
+    if (!email || !password) {
+      alert('Please fill in all fields.');
+      return;
+    }
+    try {
+      const response = await fetch('http://localhost:3001/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      if (response.ok) {
+        const user = await response.json();
+        localStorage.setItem('user', JSON.stringify(user));
+        // Reload to show goals
+        window.location.reload();
+      } else {
+        alert('Invalid credentials.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed. Please try again.');
+    }
+  });
 }
