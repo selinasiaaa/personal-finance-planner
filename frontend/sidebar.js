@@ -10,7 +10,7 @@ function createSidebar(currentPage = 'goals') {
   const userInitials = user?.name
     ? user.name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase()
     : 'GU';
-  const isAuthPage = ['login', 'register', 'forgot-password'].includes(currentPage);
+  const isAuthPage = ['login', 'register', 'forgot-password', 'change-password'].includes(currentPage);
 
   const sidebarHTML = `
     <aside class="sidebar" id="sidebar">
@@ -63,7 +63,7 @@ function createSidebar(currentPage = 'goals') {
 }
 
 function injectSidebar(currentPage = 'goals') {
-  if (['login', 'register', 'forgot-password'].includes(currentPage)) return;
+  if (['login', 'register', 'forgot-password', 'change-password'].includes(currentPage)) return;
 
   const body = document.body;
   const sidebarMarkup = createSidebar(currentPage);
@@ -82,7 +82,7 @@ document.addEventListener('click', event => {
 // Auto-inject on DOMContentLoaded if no sidebar exists yet
 document.addEventListener('DOMContentLoaded', () => {
   const currentPage = document.body.dataset.page;
-  if (!currentPage || ['login', 'register', 'forgot-password'].includes(currentPage)) {
+  if (!currentPage || ['login', 'register', 'forgot-password', 'change-password'].includes(currentPage)) {
     return;
   }
 

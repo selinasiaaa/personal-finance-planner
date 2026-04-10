@@ -68,6 +68,26 @@ app.post('/api/login', (req, res) => {
   res.json({ id: user.id, name: user.name, email: user.email });
 });
 
+app.post('/api/change-password', (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+
+  if (!email || !currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'Email, current password, and new password are required.' });
+  }
+
+  const user = users.find(u => u.email === email);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (user.password !== currentPassword) {
+    return res.status(400).json({ message: 'Current password is incorrect.' });
+  }
+
+  user.password = newPassword;
+  return res.json({ message: 'Password changed successfully.' });
+});
+
 // Forgot Password (mock)
 app.post('/api/forgot-password', (req, res) => {
   const { email } = req.body;

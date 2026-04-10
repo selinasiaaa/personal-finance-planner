@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (page === 'login') initLoginPage();
   if (page === 'register') initRegisterPage();
   if (page === 'forgot-password') initForgotPasswordPage();
+  if (page === 'change-password') initChangePasswordPage();
   if (page === 'profile') initProfilePage();
   if (page === 'dashboard') initDashboardPage();
 });
@@ -990,6 +991,58 @@ function initForgotPasswordPage() {
   });
 }
 
+function initChangePasswordPage() {
+  const user = requireAuthenticatedUser();
+  if (!user) return;
+
+  const form = document.getElementById('changePasswordForm');
+  const cancelBtn = document.getElementById('cancelChangePasswordBtn');
+
+  cancelBtn?.addEventListener('click', () => {
+    window.location.href = 'profile.html';
+  });
+
+  form?.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert('Please fill in all password fields.');
+      return;
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      alert('New password must be at least 8 characters and include a letter and a number.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert('New password and confirm password do not match.');
+      return;
+    }
+
+    try {
+      const data = await apiRequest('/api/change-password', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: user.email,
+          currentPassword,
+          newPassword,
+        })
+      });
+
+      alert(data?.message || 'Password changed successfully.');
+      window.location.href = 'profile.html';
+    } catch (error) {
+      console.error('Change password error:', error);
+      alert(error.message || 'Failed to change password.');
+    }
+  });
+}
+
 function initProfilePage() {
   const user = requireAuthenticatedUser();
   if (!user) return;
@@ -1050,7 +1103,7 @@ function initProfilePage() {
   });
 
   document.getElementById('changePasswordBtn')?.addEventListener('click', () => {
-    window.location.href = 'forgot-password.html';
+    window.location.href = 'change-password.html';
   });
 
   document.getElementById('deleteAccountBtn')?.addEventListener('click', async () => {
@@ -1074,6 +1127,151 @@ function initDashboardPage() {
   if (!user) return;
 
   const refreshBtn = document.getElementById('refreshInsightsBtn');
+  const chartState = {
+    trendHistory: [4200, 4350, 4205, 4510, 4630, 4585, 4790, 4875],
+    sectorLabels: ['Tech', 'Health', 'Finance', 'Energy', 'Industrial', 'Consumer'],
+    sectorPerformance: [15, 8, 5, -2, 6, 4],
+  };
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function syncChartData(data = {}) {
+    const performanceNumber = parseFloat(String(data.performance || '0').replace(/[^\d.-]/g, '')) || 0;
+    const bullishBias = String(data.trend || '').toLowerCase().includes('bull') ? 25 : -10;
+
+    chartState.trendHistory = [4200, 4350, 4205, 4510, 4630, 4585, 4790, 4850 + bullishBias];
+    chartState.sectorPerformance = [
+      Math.max(4, performanceNumber || 12),
+      8,
+      5,
+      -2,
+      6,
+      4,
+    ];
+  }
+
+  function renderDashboardCharts() {
+    if (typeof Chart === 'undefined') return;
+
+    Chart.defaults.font.family = 'DM Sans, sans-serif';
+    Chart.defaults.color = '#5c6170';
+
+    const trendCanvas = document.getElementById('marketTrendChart');
+    const sectorCanvas = document.getElementById('sectorPerformanceChart');
+
+    if (trendCanvas) {
+      window.marketTrendChartInstance?.destroy();
+      window.marketTrendChartInstance = new Chart(trendCanvas, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+          datasets: [{
+            data: chartState.trendHistory,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.12)',
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#3b82f6',
+            pointRadius: 4.5,
+            pointHoverRadius: 5,
+            borderWidth: 3,
+            tension: 0.35,
+            fill: false,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            y: {
+              min: 0,
+              max: 6000,
+              ticks: { stepSize: 1500 },
+              grid: { color: 'rgba(148, 163, 184, 0.18)' },
+            },
+            x: {
+              grid: { color: 'rgba(148, 163, 184, 0.18)' },
+            },
+          },
+        },
+      });
+    }
+
+    if (sectorCanvas) {
+      window.sectorPerformanceChartInstance?.destroy();
+      window.sectorPerformanceChartInstance = new Chart(sectorCanvas, {
+        type: 'bar',
+        data: {
+          labels: chartState.sectorLabels,
+          datasets: [{
+            data: chartState.sectorPerformance,
+            backgroundColor: '#3b82f6',
+            borderRadius: 8,
+            borderSkipped: false,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            y: {
+              min: -5,
+              max: 15,
+              ticks: { stepSize: 5, callback: value => `${value}` },
+              grid: { color: 'rgba(148, 163, 184, 0.18)' },
+            },
+            x: {
+              grid: { display: false },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  function updateDashboardRecommendations({ trend = 'Bullish', topPerformer = 'Tech Stocks', riskLevel = 'Moderate', performance = '+15%' } = {}) {
+    const normalizedTrend = String(trend).toLowerCase();
+    const normalizedRisk = String(riskLevel).toLowerCase();
+    const riskBadge = document.getElementById('riskBadgeText');
+
+    if (riskBadge) {
+      riskBadge.textContent = `${riskLevel} Risk`;
+      riskBadge.className = 'insight-pill';
+      if (normalizedRisk.includes('low')) {
+        riskBadge.classList.add('status-low');
+      } else if (normalizedRisk.includes('high')) {
+        riskBadge.classList.add('status-high');
+      }
+    }
+
+    setText(
+      'riskSummaryText',
+      normalizedRisk.includes('high')
+        ? 'Reduce exposure to volatile sectors'
+        : normalizedRisk.includes('low')
+          ? 'Favorable conditions for steady positioning'
+          : 'Monitor volatility'
+    );
+
+    setText(
+      'actionTrendText',
+      normalizedTrend.includes('bull')
+        ? 'Market trend is bullish. Consider increasing exposure to growth stocks.'
+        : 'Momentum is mixed. Stay selective and look for high-conviction entries.'
+    );
+
+    setText('actionAllocationText', `Review your current allocation against ${topPerformer.toLowerCase()}.`);
+    setText('actionRiskText', `Current market volatility is ${riskLevel.toLowerCase()}. Assess your risk tolerance before investing.`);
+    setText('actionMonitorText', `${topPerformer} showing strong performance (${performance}). Watch for pullback opportunities.`);
+  }
 
   async function loadInsights() {
     if (refreshBtn) {
@@ -1083,30 +1281,43 @@ function initDashboardPage() {
 
     try {
       const data = await apiRequest('/api/market-insights');
-      document.getElementById('trendValue').textContent = data.trend || 'N/A';
-      document.getElementById('sp500Value').textContent = `S&P 500 ${data.sp500 || '—'}`;
-      document.getElementById('topPerformerValue').textContent = data.topPerformer || 'N/A';
-      document.getElementById('performanceValue').textContent = data.performance || '—';
-      document.getElementById('riskLevelValue').textContent = data.riskLevel || 'N/A';
-      document.getElementById('riskSummaryText').textContent = `${data.riskLevel || 'Moderate'} market risk outlook`;
-      document.getElementById('marketTrendText').textContent = data.trend || 'N/A';
-      document.getElementById('marketTopPerformerText').textContent = data.topPerformer || 'N/A';
-      document.getElementById('marketPerformanceText').textContent = data.performance || '—';
-      document.getElementById('riskBadgeText').textContent = `${data.riskLevel || 'Moderate'} Risk`;
-      document.getElementById('insightUpdatedAt').textContent = new Date().toLocaleString();
+      syncChartData(data);
+
+      setText('trendValue', data.trend || 'N/A');
+      setText('sp500Value', `S&P 500 ${data.sp500 || '—'}`);
+      setText('topPerformerValue', data.topPerformer || 'N/A');
+      setText('performanceValue', `${data.performance || '—'} Growth`);
+      setText('riskLevelValue', data.riskLevel || 'N/A');
+      setText('marketTrendText', data.trend || 'N/A');
+      setText('marketTopPerformerText', data.topPerformer || 'N/A');
+      setText('marketPerformanceText', data.performance || '—');
+      setText(
+        'insightUpdatedAt',
+        `Last Updated: ${new Date().toLocaleString([], {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}`
+      );
+
+      updateDashboardRecommendations(data);
+      renderDashboardCharts();
     } catch (error) {
       console.error('Dashboard error:', error);
-      document.getElementById('trendValue').textContent = 'Unavailable';
-      document.getElementById('sp500Value').textContent = 'API offline';
-      document.getElementById('topPerformerValue').textContent = 'Unavailable';
-      document.getElementById('performanceValue').textContent = '—';
-      document.getElementById('riskLevelValue').textContent = 'Unavailable';
-      document.getElementById('riskSummaryText').textContent = 'Unable to load market insights right now.';
-      document.getElementById('marketTrendText').textContent = 'Unavailable';
-      document.getElementById('marketTopPerformerText').textContent = 'Unavailable';
-      document.getElementById('marketPerformanceText').textContent = '—';
-      document.getElementById('riskBadgeText').textContent = 'API Offline';
-      document.getElementById('insightUpdatedAt').textContent = 'Request failed';
+      setText('trendValue', 'Unavailable');
+      setText('sp500Value', 'API offline');
+      setText('topPerformerValue', 'Unavailable');
+      setText('performanceValue', '—');
+      setText('riskLevelValue', 'Unavailable');
+      setText('marketTrendText', 'Unavailable');
+      setText('marketTopPerformerText', 'Unavailable');
+      setText('marketPerformanceText', '—');
+      setText('insightUpdatedAt', 'Request failed');
+      setText('riskSummaryText', 'Unable to load market insights right now.');
+      setText('riskBadgeText', 'API Offline');
+      renderDashboardCharts();
     } finally {
       if (refreshBtn) {
         refreshBtn.disabled = false;
@@ -1116,6 +1327,7 @@ function initDashboardPage() {
   }
 
   refreshBtn?.addEventListener('click', loadInsights);
+  renderDashboardCharts();
   loadInsights();
 }
 
