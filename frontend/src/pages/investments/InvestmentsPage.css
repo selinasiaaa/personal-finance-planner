@@ -1,0 +1,212 @@
+.inv-container {
+    width: 100%;
+}
+
+.inv-main-title {
+    font-family: var(--font-h);
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.inv-main-sub {
+    font-size: .9rem;
+    color: var(--text-mid);
+    margin-bottom: 18px;
+}
+
+.risk-tabs {
+    display: inline-flex;
+    gap: 8px;
+    background: #fff;
+    padding: 6px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+}
+
+.risk-tab {
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    padding: 9px 16px;
+    font-family: var(--font-b);
+    font-size: .84rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    cursor: pointer;
+}
+
+.risk-tab.active.conservative,
+.risk-tab.active.balanced,
+.risk-tab.active.aggressive {
+    color: #fff;
+}
+
+.risk-tab.active.conservative {
+    background: #2e7d32;
+}
+
+.risk-tab.active.balanced {
+    background: #1565c0;
+}
+
+.risk-tab.active.aggressive {
+    background: #b71c1c;
+}
+
+.inv-info-card {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 18px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+}
+
+.inv-info-title {
+    font-family: var(--font-h);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text-dark);
+}
+
+.alloc-bar {
+    display: flex;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #e9ecef;
+}
+
+.alloc-segment {
+    height: 100%;
+}
+
+.alloc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .84rem;
+    color: var(--text-mid);
+    margin-top: 10px;
+}
+
+.alloc-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.instrument-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.instrument-tag {
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: .78rem;
+    font-weight: 600;
+    background: #fff;
+}
+
+.suitable-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 0;
+    font-size: .84rem;
+    color: var(--text-mid);
+}
+
+.confirm-summary {
+    display: grid;
+    gap: 10px;
+}
+
+.confirm-row,
+.scenario-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.confirm-label {
+    color: var(--text-mid);
+    font-size: .86rem;
+}
+
+.confirm-value {
+    color: var(--text-dark);
+    font-size: .9rem;
+    font-weight: 700;
+}
+
+.scenario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.scenario-rate-label {
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--text-mid);
+}
+
+.scenario-card {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.scenario-card.best-scenario {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, .08);
+}
+
+.scenario-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    font-weight: 700;
+}
+
+.scenario-badge {
+    font-size: .72rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 4px 10px;
+}
+
+.scenario-badge.neutral {
+    background: #eef2ff;
+    color: #3b6eff;
+}
+
+.scenario-badge.best {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.profit-delta {
+    margin-left: 8px;
+    font-size: .72rem;
+    color: #15803d;
+    font-weight: 700;
+}
+
+.best-dot {
+    font-size: .7rem;
+    margin-left: 6px;
+    color: #22c55e;
+}

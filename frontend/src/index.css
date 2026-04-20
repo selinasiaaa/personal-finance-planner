@@ -1,36 +1,230 @@
-/* =========================
-   RESET
-========================= */
+/* ═══════════════════════════════════════════════════════
+   WEALTHTRACK SPA — Global Styles
+   This file is the shared base loaded once from main.jsx.
+═══════════════════════════════════════════════════════ */
+
+:root {
+  --sidebar-w: 224px;
+  --bg-page: #eef1f8;
+  --bg-white: #ffffff;
+  --blue: #3b6eff;
+  --blue-light: #e8eeff;
+  --blue-dark: #2a55d4;
+  --green: #22c55e;
+  --green-light: #dcfce7;
+  --orange: #f97316;
+  --red: #ef4444;
+  --purple: #8b5cf6;
+  --text-dark: #1a1d2e;
+  --text-mid: #5c6170;
+  --text-light: #9ca3af;
+  --border: #e2e6f0;
+  --shadow: 0 2px 16px rgba(59,110,255,.07), 0 1px 4px rgba(0,0,0,.04);
+  --shadow-hover: 0 8px 28px rgba(59,110,255,.14);
+  --r-card: 18px;
+  --r-sm: 12px;
+  --r-xs: 8px;
+  --T: .2s ease;
+  --font-h: 'Sora', sans-serif;
+  --font-b: 'DM Sans', sans-serif;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
 }
 
 body {
   margin: 0;
+  font-family: var(--font-b);
+  background: var(--bg-page);
+  color: var(--text-dark);
+  display: flex;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* =========================
-   BASE LAYOUT
-   FIXED: removed text-align:center, flex-direction:column
-   App.css handles all layout via .sidebar + .main-content
-========================= */
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
-
-/* =========================
-   TYPOGRAPHY
-   FIXED: removed h1 { font-size:56px; margin:32px 0 }
-   and h2 overrides — App.css defines .page-title and
-   all heading styles for WealthTrack
-========================= */
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
 }
 
 p {
   margin: 0;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c5cdd8; border-radius: 99px; }
+
+.main-content {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  padding: 30px 32px 60px;
+  min-height: 100vh;
+}
+
+.main-content .row {
+  --bs-gutter-x: 1.5rem;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.main-content .row > [class*="col-"] {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.page-title {
+  font-family: var(--font-h);
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  color: var(--text-dark);
+}
+
+.page-subtitle {
+  color: var(--text-mid);
+  font-size: .9rem;
+  margin-top: 4px;
+}
+
+.search-box { position: relative; display: flex; align-items: center; }
+.search-box input {
+  border: 1.5px solid var(--border);
+  border-radius: 99px;
+  padding: 8px 16px 8px 36px;
+  font-size: .84rem;
+  font-family: var(--font-b);
+  outline: none;
+  width: 200px;
+  background: var(--bg-white);
+  color: var(--text-dark);
+  transition: border-color var(--T);
+}
+.search-box input:focus { border-color: var(--blue); }
+.search-icon { position: absolute; left: 12px; color: var(--text-light); font-size: .85rem; pointer-events: none; }
+
+.btn-primary-action {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  padding: 9px 20px;
+  font-family: var(--font-b);
+  font-size: .86rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(59,110,255,.3);
+  transition: background var(--T), transform var(--T), box-shadow var(--T);
+  white-space: nowrap;
+}
+.btn-primary-action:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(59,110,255,.38); }
+
+.alert-banner {
+  background: #eef2ff;
+  border: 1.5px solid #c7d2fe;
+  border-radius: var(--r-sm);
+  padding: 12px 18px;
+  font-size: .86rem;
+  color: #3730a3;
+  display: flex;
+  align-items: center;
+}
+
+.summary-card {
+  background: var(--bg-white);
+  border-radius: var(--r-card);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  border: 2px solid transparent;
+  transition: transform var(--T);
+}
+.summary-card:hover { transform: translateY(-2px); }
+.summary-label { font-size: .78rem; color: var(--text-mid); font-weight: 500; margin-bottom: 5px; }
+.summary-value { font-family: var(--font-h); font-size: 1.45rem; font-weight: 700; letter-spacing: -.03em; line-height: 1.2; margin-bottom: 4px; }
+.summary-sub { font-size: .76rem; color: var(--text-mid); margin: 0; }
+.summary-blue   { border-color: #60a5fa; }
+.summary-green  { border-color: #4ade80; }
+.summary-orange { border-color: #fb923c; }
+.summary-purple { border-color: #a78bfa; }
+.summary-rainbow { border: none; position: relative; }
+.summary-rainbow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-card);
+  padding: 2px;
+  background: conic-gradient(from 180deg at 50% 50%, #60a5fa 0deg, #a78bfa 90deg, #f472b6 180deg, #fb923c 270deg, #60a5fa 360deg);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.modal-main-title { font-family: var(--font-h); font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+.modal-main-sub { font-size: .85rem; color: var(--text-mid); margin-bottom: 20px; }
+.modal-field { margin-bottom: 14px; }
+.modal-label { display: block; font-size: .82rem; font-weight: 600; color: var(--text-mid); margin-bottom: 5px; }
+.modal-input-field {
+  width: 100%;
+  border: none;
+  background: #f3f5f9;
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  font-family: var(--font-b);
+  font-size: .86rem;
+  color: var(--text-dark);
+  outline: none;
+  transition: box-shadow var(--T);
+}
+.modal-input-field:focus { box-shadow: 0 0 0 2px var(--blue); }
+
+.btn-modal-cancel {
+  border: 1.5px solid var(--border);
+  background: var(--bg-white);
+  border-radius: 99px;
+  padding: 10px;
+  font-family: var(--font-b);
+  font-size: .86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--T);
+}
+.btn-modal-cancel:hover { background: #f3f5f9; }
+.btn-modal-save {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  padding: 10px;
+  font-family: var(--font-b);
+  font-size: .86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--T);
+  position: relative;
+  z-index: 1;
+}
+.btn-modal-save:hover { background: var(--blue-dark); }
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-content {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
 }

@@ -1,0 +1,5 @@
+@import './AuthShared.css';
+
+.form-options {
+	justify-content: space-between;
+}

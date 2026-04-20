@@ -1,0 +1,243 @@
+.filter-tabs {
+    display: flex;
+    gap: 5px;
+    background: var(--bg-white);
+    border: 1.5px solid var(--border);
+    border-radius: 99px;
+    padding: 5px;
+    width: fit-content;
+}
+
+.filter-tab {
+    background: transparent;
+    border: none;
+    border-radius: 99px;
+    padding: 7px 20px;
+    font-family: var(--font-b);
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--text-mid);
+    cursor: pointer;
+    letter-spacing: .03em;
+    transition: background var(--T), color var(--T);
+}
+
+.filter-tab:hover {
+    color: var(--blue);
+}
+
+.filter-tab.active {
+    background: var(--blue);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 3px 10px rgba(59, 110, 255, .3);
+}
+
+.goal-card {
+    background: var(--bg-white);
+    border-radius: var(--r-card);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--T), box-shadow var(--T);
+}
+
+.goal-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.goal-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.goal-icon {
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.status-badge {
+    font-size: .72rem;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 4px 12px;
+}
+
+.status-badge.on-track {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-badge.at-risk {
+    background: #ffedd5;
+    color: #c2410c;
+    border: none;
+}
+
+.status-badge.high-risk {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-badge.completed {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.goal-title {
+    font-family: var(--font-h);
+    font-size: .96rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    margin-bottom: 5px;
+}
+
+.goal-desc {
+    font-size: .78rem;
+    color: var(--text-mid);
+    line-height: 1.45;
+    margin-bottom: 12px;
+    flex: 1;
+}
+
+.goal-progress {
+    height: 5px;
+    border-radius: 99px;
+    background: #e9ecef;
+    margin-bottom: 9px;
+    overflow: hidden;
+}
+
+.goal-progress .progress-bar {
+    background: var(--blue);
+    border-radius: 99px;
+}
+
+.goal-amounts {
+    font-size: .83rem;
+    margin-bottom: 12px;
+}
+
+.goal-amounts strong {
+    font-weight: 700;
+}
+
+.goal-amounts span {
+    color: var(--text-mid);
+}
+
+.goal-meta {
+    margin-top: auto;
+}
+
+.meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: .78rem;
+    color: var(--text-mid);
+    margin-bottom: 5px;
+}
+
+.meta-row i {
+    margin-right: 4px;
+}
+
+.meta-monthly {
+    font-size: .78rem;
+    color: var(--text-mid);
+    display: block;
+}
+
+.meta-monthly i {
+    margin-right: 4px;
+}
+
+.goal-actions {
+    display: flex;
+    gap: 3px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    font-size: .88rem;
+    padding: 2px 5px;
+    border-radius: 6px;
+    transition: color var(--T), background var(--T);
+}
+
+.action-btn:hover {
+    color: var(--blue);
+    background: var(--blue-light);
+}
+
+.action-btn.delete-btn:hover {
+    color: var(--red);
+    background: #fee2e2;
+}
+
+.create-goal-card {
+    background: transparent;
+    border: 2px dashed #c5cdd8;
+    cursor: pointer;
+    min-height: 220px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: border-color var(--T), background var(--T);
+}
+
+.create-goal-card:hover {
+    border-color: var(--blue);
+    background: var(--blue-light);
+    transform: translateY(-3px);
+    box-shadow: none;
+}
+
+.create-goal-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.create-plus {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #e5e9f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--text-mid);
+    transition: background var(--T), color var(--T);
+}
+
+.create-goal-card:hover .create-plus {
+    background: var(--blue);
+    color: #fff;
+}
+
+.create-title {
+    font-family: var(--font-h);
+    font-weight: 600;
+    font-size: .92rem;
+    color: var(--text-mid);
+    margin: 0;
+}
+
+.create-sub {
+    font-size: .76rem;
+    color: var(--text-light);
+    margin: 0;
+}
