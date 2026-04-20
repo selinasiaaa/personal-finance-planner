@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { MOCK_GOALS } from '../../data/mockGoals'
+import { GOAL_FILTERS, GOAL_STATUS_LABELS, GOAL_STATUS } from '../../constants/goalStatus'
 import './GoalsPage.css'
 
 // GOALS PAGE
 // ═══════════════════════════════════════════════════════
 const GoalsPage = ({ user }) => {
   const navigate = useNavigate();
-  const [goals, setGoals] = useState([
-    { id: 1, icon: '🏠', name: 'Dream Home Down Payment', desc: 'Save for a 20% down payment on a RM650,000 house', target: 'RM 130,000', savings: 'RM 88,400', monthly: 'RM 1,800', dateLabel: 'Dec 2030', status: 'on-track', progressPercent: 68 },
-    { id: 2, icon: '🏦', name: 'Personal Savings Fund', desc: 'A flexible goal for personal savings or miscellaneous expenses', target: 'RM 100,000', savings: 'RM 44,000', monthly: 'RM 1,200', dateLabel: 'Sep 2031', status: 'on-track', progressPercent: 44 },
-    { id: 3, icon: '🚨', name: 'Emergency Fund', desc: 'Save 3–6 months of expenses for emergencies', target: 'RM 30,000', savings: 'RM 16,500', monthly: 'RM 375', dateLabel: 'Jun 2027', status: 'at-risk', progressPercent: 55 },
-    { id: 4, icon: '✈️', name: 'Travel Fund', desc: 'Save for a trip to Korea, including flights and accommodation', target: 'RM 20,000', savings: 'RM 16,400', monthly: 'RM 600', dateLabel: 'Aug 2027', status: 'on-track', progressPercent: 82 },
-    { id: 5, icon: '⛱️', name: 'Early Retirement Fund', desc: 'Financial independence by age 51 — retire comfortably', target: 'RM 1,000,000', savings: 'RM 210,000', monthly: 'RM 2,100', dateLabel: 'Mar 2055', status: 'high-risk', progressPercent: 21, hasAI: true },
-    { id: 6, icon: '✈️', name: 'Japan Travel Fund', desc: 'Save for a trip to Japan, including flights and accommodation', target: 'RM 5,500', savings: 'RM 5,500', monthly: 'RM 500', dateLabel: 'Dec 2024', status: 'completed', progressPercent: 100 },
-    { id: 7, icon: '📦', name: 'Laptop Upgrade Fund', desc: 'A dedicated goal for saving towards a new laptop or device upgrade.', target: 'RM 4,000', savings: 'RM 4,000', monthly: 'RM 250', dateLabel: 'Aug 2025', status: 'completed', progressPercent: 100 },
-  ]);
+  const [goals, setGoals] = useState(MOCK_GOALS);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -38,7 +32,7 @@ const GoalsPage = ({ user }) => {
       setGoals(goals.map(g => g.id === editingGoal.id ? { ...editingGoal, ...formData } : g));
       setEditingGoal(null);
     } else {
-      setGoals([...goals, { id: Math.max(...goals.map(g => g.id), 0) + 1, ...formData, status: 'on-track', progressPercent: 0 }]);
+      setGoals([...goals, { id: Math.max(...goals.map(g => g.id), 0) + 1, ...formData, status: GOAL_STATUS.ON_TRACK, progressPercent: 0 }]);
     }
     setShowModal(false);
     setFormData({ icon: '🏠', name: '', desc: '', target: '', savings: '', monthly: '', dateLabel: '' });
@@ -51,7 +45,7 @@ const GoalsPage = ({ user }) => {
   return (
     <div className="main-content">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="header-container">
         <h1 className="page-title">Financial Goals</h1>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="search-box">
@@ -63,7 +57,7 @@ const GoalsPage = ({ user }) => {
       </div>
 
       {/* Summary cards — equal CSS grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
+      <div className="grid-4col mb-5">
         <div className="summary-card summary-blue">
           <p className="summary-label">Total Saved</p>
           <p className="summary-value">RM 384,800</p>
@@ -94,21 +88,21 @@ const GoalsPage = ({ user }) => {
 
       {/* Filter tabs */}
       <div className="filter-tabs mb-4">
-        {['all', 'on-track', 'at-risk', 'high-risk', 'completed'].map(f => (
-          <button key={f} className={`filter-tab ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-            {f === 'all' ? 'All Goals' : f === 'on-track' ? 'On Track' : f === 'at-risk' ? 'At Risk' : f === 'high-risk' ? 'High Risk' : 'Completed'}
+        {GOAL_FILTERS.map(f => (
+          <button key={f.value} className={`filter-tab ${filter === f.value ? 'active' : ''}`} onClick={() => setFilter(f.value)}>
+            {f.label}
           </button>
         ))}
       </div>
 
       {/* Goal cards — CSS grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      <div className="grid-3col">
         {filteredGoals.map(goal => (
           <div key={goal.id} className="goal-card">
             <div className="goal-card-top">
               <span className="goal-icon">{goal.icon}</span>
               <span className={`status-badge ${goal.status}`}>
-                {goal.status === 'completed' ? 'Completed' : goal.status === 'at-risk' ? 'At Risk' : goal.status === 'high-risk' ? 'High Risk' : 'On Track'}
+                {GOAL_STATUS_LABELS[goal.status]}
               </span>
             </div>
             <h5 className="goal-title">{goal.name}</h5>

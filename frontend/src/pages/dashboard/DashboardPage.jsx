@@ -79,7 +79,7 @@ const DashboardPage = ({ user }) => {
           <div key={label} style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: '18px', padding: '22px 24px', boxShadow: '0 2px 16px rgba(59,110,255,.07)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
             <div>
               <p className="summary-label">{label}</p>
-              <h2 className={`summary-value ${emphasis}`} style={{ fontSize: '1.9rem' }}>{value}</h2>
+              <h2 className={`summary-value ${emphasis}`}>{value}</h2>
               <p className="summary-sub">{sub}</p>
             </div>
             <div style={iconBox(bg, color)}><i className={`bi ${icon}`}></i></div>
@@ -114,7 +114,7 @@ const DashboardPage = ({ user }) => {
 
       {/* Financial News */}
       <div style={{ marginBottom: '20px' }}>
-        <div className="dashboard-section-header">
+        <div className="dashboard-section-header dashboard-section-header--stacked">
           <h2 className="dashboard-section-title">Financial News</h2>
           <p className="page-subtitle">Latest updates from trusted sources</p>
         </div>
@@ -141,7 +141,7 @@ const DashboardPage = ({ user }) => {
 
       {/* Charts */}
       <div style={{ marginBottom: '20px' }}>
-        <div className="dashboard-section-header">
+        <div className="dashboard-section-header dashboard-section-header--stacked">
           <h2 className="dashboard-section-title">Market Trends Visualization</h2>
           <p className="page-subtitle">Historical performance and sector analysis</p>
         </div>
@@ -163,7 +163,7 @@ const DashboardPage = ({ user }) => {
           <h2 className="dashboard-section-title">Next Actions &amp; Recommendations</h2>
           <p className="page-subtitle">Suggested actions based on current market conditions</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '18px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginTop: '18px' }}>
           {[
             { icon: 'bi-check-circle',    title: 'Stay Aggressive',             text: 'Market trend is bullish. Consider increasing exposure to growth stocks.',                                                    warn: false },
             { icon: 'bi-bar-chart-line',  title: 'Compare Portfolio Allocation', text: 'Review your current allocation against top-performing sectors.',                                                             warn: true  },

@@ -153,6 +153,8 @@ p {
 .summary-label { font-size: .78rem; color: var(--text-mid); font-weight: 500; margin-bottom: 5px; }
 .summary-value { font-family: var(--font-h); font-size: 1.45rem; font-weight: 700; letter-spacing: -.03em; line-height: 1.2; margin-bottom: 4px; }
 .summary-sub { font-size: .76rem; color: var(--text-mid); margin: 0; }
+.summary-emphasis-green { color: #08a045 !important; }
+.summary-emphasis-dark { color: #243b61 !important; }
 .summary-blue   { border-color: #60a5fa; }
 .summary-green  { border-color: #4ade80; }
 .summary-orange { border-color: #fb923c; }
@@ -227,4 +229,97 @@ p {
   flex: 1;
   width: 100%;
   min-width: 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY CLASSES — Replace inline styles
+═══════════════════════════════════════════════════════ */
+
+/* Layout utilities */
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-start { display: flex; align-items: flex-start; gap: 16px; }
+.grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-20 { gap: 20px; }
+
+/* Margin utilities */
+.mb-0 { margin-bottom: 0; }
+.mb-4 { margin-bottom: 16px; }
+.mb-5 { margin-bottom: 20px; }
+.mt-2 { margin-top: 8px; }
+.mt-4 { margin-top: 16px; }
+
+/* Padding utilities */
+.p-4 { padding: 16px; }
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; }
+
+/* Text utilities */
+.text-center { text-align: center; }
+.label-sm { font-size: .72rem; font-weight: 700; color: var(--text-mid); }
+
+/* Modal utilities */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 22px;
+  max-width: 560px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(59, 110, 255, 0.18);
+}
+
+.modal-header {
+  background: #2c3ecc;
+  padding: 28px 26px 22px;
+  border-radius: 22px 22px 0 0;
+}
+
+.modal-header-subtitle {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.modal-header-title {
+  color: #fff;
+  font-family: var(--font-h);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+.modal-body {
+  padding: 24px 26px;
+}
+
+/* Card utilities */
+.card-base {
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+
+/* Spacing fix for header */
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
