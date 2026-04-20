@@ -1,0 +1,36 @@
+/* =========================
+   RESET
+========================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================
+   BASE LAYOUT
+   FIXED: removed text-align:center, flex-direction:column
+   App.css handles all layout via .sidebar + .main-content
+========================= */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* =========================
+   TYPOGRAPHY
+   FIXED: removed h1 { font-size:56px; margin:32px 0 }
+   and h2 overrides — App.css defines .page-title and
+   all heading styles for WealthTrack
+========================= */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
