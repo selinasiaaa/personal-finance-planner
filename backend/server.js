@@ -11,6 +11,11 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// 1. Your new "Front Door" route correctly placed AFTER app is defined
+app.get('/', (req, res) => {
+  res.send('Personal Financial Planning System API is live and running!');
+});
+
 const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 if (mongoUri && !mongoUri.includes('your_mongodb_atlas_connection_string_here')) {

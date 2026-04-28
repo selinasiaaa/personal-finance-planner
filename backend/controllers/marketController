@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const MarketData = require('../models/MarketData');
-const { fetchGeminiMarketInsights } = require('../services/financialApi');
+// 1. Changed the import to match the new Finnhub function
+const { fetchMarketInsights } = require('../services/financialApi');
 
 const buildRiskSub = (riskLevel) => {
   switch ((riskLevel || '').toLowerCase()) {
@@ -70,12 +71,15 @@ const getCachedMarketData = async () => {
 
 const getMarketInsights = async (req, res) => {
   try {
-    const geminiData = await fetchGeminiMarketInsights();
-    if (geminiData) {
-      const dashboardData = normalizeMarketData(geminiData);
+    // 2. Call the new Finnhub function
+    const apiData = await fetchMarketInsights();
+    
+    if (apiData) {
+      const dashboardData = normalizeMarketData(apiData);
       await saveMarketCache(dashboardData);
 
-      return res.status(200).json({ success: true, data: dashboardData, source: 'gemini' });
+      // 3. Changed source label to 'finnhub' so your frontend knows it is live data
+      return res.status(200).json({ success: true, data: dashboardData, source: 'finnhub' });
     }
 
     const cachedData = await getCachedMarketData();
