@@ -15,6 +15,78 @@ const buildRiskSub = (riskLevel) => {
   }
 };
 
+const buildRecommendations = (summary = {}, news = []) => {
+  const trend = (summary.trend || '').toLowerCase();
+  const riskLevel = (summary.riskLevel || '').toLowerCase();
+  const topPerformer = summary.topPerformer || 'the leading sector';
+  const performance = summary.performanceReading || '0%';
+  const firstHeadline = news[0]?.title || 'the latest market updates';
+
+  const recommendations = [];
+
+  if (trend === 'bullish') {
+    recommendations.push({
+      icon: 'bi-graph-up-arrow',
+      title: 'Ride the Trend',
+      text: `Market sentiment is positive. Consider reviewing growth exposure around ${topPerformer}.`,
+      warn: false,
+    });
+  } else if (trend === 'bearish') {
+    recommendations.push({
+      icon: 'bi-shield-exclamation',
+      title: 'Protect Capital',
+      text: `Momentum is weaker. Focus on capital preservation and watch ${firstHeadline}.`,
+      warn: true,
+    });
+  } else {
+    recommendations.push({
+      icon: 'bi-easel2',
+      title: 'Stay Balanced',
+      text: `The market is neutral. Keep a balanced allocation and monitor ${topPerformer}.`,
+      warn: false,
+    });
+  }
+
+  recommendations.push({
+    icon: 'bi-bar-chart-line',
+    title: 'Review Allocation',
+    text: `Compare your portfolio against ${topPerformer} and recent performance at ${performance}.`,
+    warn: false,
+  });
+
+  recommendations.push({
+    icon: 'bi-newspaper',
+    title: 'Read the Latest News',
+    text: `Check the latest headline: ${firstHeadline}. Use it to confirm the current market direction.`,
+    warn: false,
+  });
+
+  if (riskLevel === 'high') {
+    recommendations.push({
+      icon: 'bi-exclamation-triangle',
+      title: 'Reduce Risk',
+      text: 'Volatility is elevated. Consider smaller position sizes and tighter stop-loss planning.',
+      warn: true,
+    });
+  } else if (riskLevel === 'moderate') {
+    recommendations.push({
+      icon: 'bi-shield-check',
+      title: 'Monitor Volatility',
+      text: 'Risk is moderate. Stay alert to price swings and rebalance if needed.',
+      warn: false,
+    });
+  } else {
+    recommendations.push({
+      icon: 'bi-check-circle',
+      title: 'Stay Disciplined',
+      text: 'Risk is low. Continue with your plan and keep an eye on any macro changes.',
+      warn: false,
+    });
+  }
+
+  return recommendations.slice(0, 4);
+};
+
 const normalizeMarketData = (source = {}) => {
   const summary = source.summary || {};
   const news = Array.isArray(source.news) ? source.news : [];
@@ -36,6 +108,7 @@ const normalizeMarketData = (source = {}) => {
     riskSub: buildRiskSub(riskLevel),
     news,
     charts, // 2. Add charts to the final payload sent to the frontend!
+    recommendations: buildRecommendations({ trend, topPerformer, performanceReading: performance, riskLevel }, news),
     summary: {
       trend,
       topPerformer,

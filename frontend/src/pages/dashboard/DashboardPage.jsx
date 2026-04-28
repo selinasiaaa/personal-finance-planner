@@ -9,6 +9,8 @@ const DashboardPage = ({ user }) => {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     trend: '—', sp500: '—', topPerformer: '—', performance: '—', riskLevel: '—', riskSub: '', news: [],
+    charts: { sp500Trend: [], sectorPerformance: [] },
+    recommendations: [],
   });
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -35,20 +37,82 @@ const DashboardPage = ({ user }) => {
         riskLevel: data.riskLevel ?? '—',
         riskSub: data.riskSub ?? '',
         news: Array.isArray(data.news) ? data.news : [],
+        charts: {
+          sp500Trend: Array.isArray(data.charts?.sp500Trend) ? data.charts.sp500Trend : [],
+          sectorPerformance: Array.isArray(data.charts?.sectorPerformance) ? data.charts.sectorPerformance : [],
+        },
+        recommendations: Array.isArray(data.recommendations) ? data.recommendations : [],
       });
       setLastUpdated(new Date());
-      renderCharts();
+      renderCharts(data.charts);
     } catch (err) {
       console.error('Error loading market insights:', err);
     } finally { setLoading(false); }
   };
 
-  const renderCharts = () => {
+  const renderCharts = (charts = {}) => {
+    const sp500Trend = Array.isArray(charts.sp500Trend) ? charts.sp500Trend : [];
+    const sectorPerformance = Array.isArray(charts.sectorPerformance) ? charts.sectorPerformance : [];
+
+    const currentMonthIndex = new Date().getMonth();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const buildRecentMonthLabels = (count) => {
+      const labels = [];
+      for (let offset = Math.max(0, count - 1); offset >= 0; offset -= 1) {
+        const monthIndex = (currentMonthIndex - offset + 12) % 12;
+        labels.push(monthNames[monthIndex]);
+      }
+      return labels;
+    };
+
+    const trendLabels = sp500Trend.map((point) => point.month ?? '');
+    const trendValues = sp500Trend.map((point) => Number(point.price ?? 0));
+    const trendFallbackLabels = buildRecentMonthLabels(6);
+    const sectorLabels = sectorPerformance.map((item) => item.sector ?? '');
+    const sectorValues = sectorPerformance.map((item) => Number(item.performance ?? 0));
+    const buildSectorScale = (values) => {
+      if (!values.length) {
+        return { min: -5, max: 5, stepSize: 2.5 };
+      }
+
+      const rawMin = Math.min(...values);
+      const rawMax = Math.max(...values);
+      const padding = Math.max(0.5, (rawMax - rawMin) * 0.2);
+      let min = Math.max(-5, Math.floor((rawMin - padding) * 2) / 2);
+      let max = Math.min(5, Math.ceil((rawMax + padding) * 2) / 2);
+
+      if (min === max) {
+        min = Math.max(-5, min - 1);
+        max = Math.min(5, max + 1);
+      }
+
+      const span = max - min;
+      let stepSize = 1;
+      if (span <= 2) stepSize = 0.5;
+      else if (span <= 4) stepSize = 1;
+      else stepSize = 2;
+
+      return { min, max, stepSize };
+    };
+    const sectorScale = buildSectorScale(sectorValues.length > 0 ? sectorValues : [15, 8, 5, -2, 6, 4]);
+
     if (trendChartInst.current) trendChartInst.current.destroy();
     if (trendChartRef.current) {
       trendChartInst.current = new Chart(trendChartRef.current, {
         type: 'line',
-        data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'], datasets: [{ data: [4200,4350,4205,4510,4630,4585,4790,4875], borderColor: '#3b6eff', backgroundColor: 'rgba(59,110,255,0.10)', pointBackgroundColor: '#3b6eff', pointRadius: 5, borderWidth: 2.5, tension: 0.35, fill: false }] },
+        data: {
+          labels: trendLabels.length > 0 ? trendLabels : trendFallbackLabels,
+          datasets: [{
+            data: trendValues.length > 0 ? trendValues : [4200, 4350, 4205, 4510, 4630, 4585],
+            borderColor: '#3b6eff',
+            backgroundColor: 'rgba(59,110,255,0.10)',
+            pointBackgroundColor: '#3b6eff',
+            pointRadius: 5,
+            borderWidth: 2.5,
+            tension: 0.35,
+            fill: false,
+          }],
+        },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 6000, ticks: { stepSize: 1500, color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.18)' }, border: { display: false } }, x: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.18)' }, border: { display: false } } } },
       });
     }
@@ -56,8 +120,16 @@ const DashboardPage = ({ user }) => {
     if (sectorChartRef.current) {
       sectorChartInst.current = new Chart(sectorChartRef.current, {
         type: 'bar',
-        data: { labels: ['Tech','Health','Finance','Energy','Industrial','Consumer'], datasets: [{ data: [15,8,5,-2,6,4], backgroundColor: '#3b6eff', borderRadius: 8, borderSkipped: false }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: -5, max: 15, ticks: { stepSize: 5, color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.18)' }, border: { display: false } }, x: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { display: false }, border: { display: false } } } },
+        data: {
+          labels: sectorLabels.length > 0 ? sectorLabels : ['Tech', 'Health', 'Finance', 'Energy', 'Industrial', 'Consumer'],
+          datasets: [{
+            data: sectorValues.length > 0 ? sectorValues : [15, 8, 5, -2, 6, 4],
+            backgroundColor: '#3b6eff',
+            borderRadius: 8,
+            borderSkipped: false,
+          }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: sectorScale.min, max: sectorScale.max, ticks: { stepSize: sectorScale.stepSize, color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.18)' }, border: { display: false } }, x: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { display: false }, border: { display: false } } } },
       });
     }
   };
@@ -183,17 +255,17 @@ const DashboardPage = ({ user }) => {
           <p className="page-subtitle">Suggested actions based on current market conditions</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginTop: '18px' }}>
-          {[
-            { icon: 'bi-check-circle',    title: 'Stay Aggressive',             text: 'Market trend is bullish. Consider increasing exposure to growth stocks.',                                                    warn: false },
-            { icon: 'bi-bar-chart-line',  title: 'Compare Portfolio Allocation', text: 'Review your current allocation against top-performing sectors.',                                                             warn: true  },
-            { icon: 'bi-shield-check',    title: 'Review Risk Level',            text: 'Current market volatility is moderate. Assess your risk tolerance before investing.',                                         warn: false },
-            { icon: 'bi-exclamation-circle', title: 'Monitor Tech Sector',      text: `Tech Stocks showing strong performance (${dashboardData.performance.replace(' Growth','')}). Watch for pullback opportunities.`, warn: true  },
-          ].map((r, i) => (
-            <div key={i} className={`recommendation-item${r.warn ? ' warning' : ''}`}>
+          {dashboardData.recommendations.length > 0 ? dashboardData.recommendations.map((r, i) => (
+            <div key={`${r.title ?? 'rec'}-${i}`} className={`recommendation-item${r.warn ? ' warning' : ''}`}>
               <div className="recommendation-icon"><i className={`bi ${r.icon}`}></i></div>
               <div><h4>{r.title}</h4><p>{r.text}</p></div>
             </div>
-          ))}
+          )) : (
+            <div className="recommendation-item">
+              <div className="recommendation-icon"><i className="bi bi-info-circle"></i></div>
+              <div><h4>No recommendations yet</h4><p>Refresh the insights to generate dynamic recommendations.</p></div>
+            </div>
+          )}
         </div>
       </div>
     </div>
