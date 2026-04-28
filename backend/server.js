@@ -1,10 +1,28 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
+const { getMarketInsights } = require('./controllers/marketController');
+
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+
+if (mongoUri && !mongoUri.includes('your_mongodb_atlas_connection_string_here')) {
+  mongoose
+    .connect(mongoUri)
+    .then(() => console.log('MongoDB connected'))
+    .catch((error) => console.warn(`MongoDB connection skipped: ${error.message}`));
+} else {
+  console.warn('MongoDB URI not configured. Market insights will run without cache.');
+}
+
+app.get('/api/market-insights', getMarketInsights);
 
 const goals = [
   { id: 'goal-1', name: 'Dream Home Down Payment', saved: 88400, target: 130000, status: 'on-track', portfolioType: null },
@@ -126,18 +144,6 @@ app.delete('/api/profile', (req, res) => {
   } else {
     res.status(404).json({ message: 'User not found' });
   }
-});
-
-// Market Insights (Backend F)
-app.get('/api/market-insights', (req, res) => {
-  // Mock data
-  res.json({
-    trend: 'Bullish',
-    sp500: '+2.5%',
-    topPerformer: 'Tech Stocks',
-    performance: '+15%',
-    riskLevel: 'Moderate'
-  });
 });
 
 app.listen(PORT, () => {

@@ -1,0 +1,95 @@
+const mongoose = require('mongoose');
+const MarketData = require('../models/MarketData');
+const { fetchGeminiMarketInsights } = require('../services/financialApi');
+
+const buildRiskSub = (riskLevel) => {
+  switch ((riskLevel || '').toLowerCase()) {
+    case 'low':
+      return 'Use a conservative stance';
+    case 'moderate':
+      return 'Monitor volatility';
+    case 'high':
+      return 'Tighten risk controls';
+    default:
+      return '';
+  }
+};
+
+const normalizeMarketData = (source = {}) => {
+  const summary = source.summary || {};
+  const news = Array.isArray(source.news) ? source.news : [];
+  const trend = summary.trend || source.trend || 'Neutral';
+  const topPerformer = summary.topPerformer || source.topPerformer || 'Market Leaders';
+  const performance = summary.performanceReading || source.performance || source.sp500 || '—';
+  const riskLevel = summary.riskLevel || source.riskLevel || 'Moderate';
+
+  return {
+    trend,
+    sp500: source.sp500 || performance,
+    topPerformer,
+    performance,
+    riskLevel,
+    riskSub: buildRiskSub(riskLevel),
+    news,
+    summary: {
+      trend,
+      topPerformer,
+      performanceReading: performance,
+      riskLevel,
+    },
+    lastFetched: source.lastFetched || new Date().toISOString(),
+  };
+};
+
+const canUseCache = () => mongoose.connection.readyState === 1;
+
+const saveMarketCache = async (dashboardData) => {
+  if (!canUseCache()) {
+    return;
+  }
+
+  await MarketData.findOneAndUpdate(
+    {},
+    {
+      summary: dashboardData.summary,
+      news: dashboardData.news,
+      lastFetched: dashboardData.lastFetched,
+    },
+    { upsert: true, new: true },
+  );
+};
+
+const getCachedMarketData = async () => {
+  if (!canUseCache()) {
+    return null;
+  }
+
+  const cached = await MarketData.findOne().lean();
+  return cached ? normalizeMarketData(cached) : null;
+};
+
+const getMarketInsights = async (req, res) => {
+  try {
+    const geminiData = await fetchGeminiMarketInsights();
+    if (geminiData) {
+      const dashboardData = normalizeMarketData(geminiData);
+      await saveMarketCache(dashboardData);
+
+      return res.status(200).json({ success: true, data: dashboardData, source: 'gemini' });
+    }
+
+    const cachedData = await getCachedMarketData();
+
+    if (cachedData) {
+      return res.status(200).json({ success: true, data: cachedData, source: 'cache' });
+    }
+
+    return res.status(503).json({ success: false, message: 'No market insights available yet.' });
+
+  } catch (error) {
+    console.error(`Controller Error: ${error.message}`);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
+module.exports = { getMarketInsights };

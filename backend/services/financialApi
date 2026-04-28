@@ -1,0 +1,63 @@
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+const fetchGeminiMarketInsights = async () => {
+  try {
+    // Initialize the Gemini API
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // Using gemini-1.5-flash as it is the fastest and most cost-effective for this task
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // The prompt instructs Gemini to act as a financial analyst and return strict JSON
+    const prompt = `
+      Act as a senior financial analyst. Generate a current, realistic market insights report for today.
+      You MUST respond ONLY with a valid JSON object. Do not include markdown formatting like \`\`\`json.
+      
+      Structure the JSON exactly like this:
+      {
+        "summary": {
+          "trend": "Bullish" or "Bearish" or "Neutral",
+          "topPerformer": "[Name of Sector, e.g., Tech Stocks]",
+          "performanceReading": "[e.g., +2.5%]",
+          "riskLevel": "Low" or "Moderate" or "High"
+        },
+        "news": [
+          {
+            "title": "[Realistic financial headline 1]",
+            "source": "[e.g., Bloomberg, Reuters]",
+            "timeLabel": "[e.g., 2 hours ago]",
+            "link": "#"
+          },
+          {
+            "title": "[Realistic financial headline 2]",
+            "source": "[e.g., Financial Times]",
+            "timeLabel": "[e.g., 4 hours ago]",
+            "link": "#"
+          },
+          {
+            "title": "[Realistic financial headline 3]",
+            "source": "[e.g., Wall Street Journal]",
+            "timeLabel": "[e.g., 6 hours ago]",
+            "link": "#"
+          }
+        ]
+      }
+    `;
+
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+    
+    // Clean the string in case Gemini added markdown code blocks
+    const cleanedText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // Parse the string into a real JavaScript object
+    const marketData = JSON.parse(cleanedText);
+    
+    return marketData;
+
+  } catch (error) {
+    console.error("Gemini API Error:", error.message);
+    return null; // Return null so the controller knows to fall back to the MongoDB cache
+  }
+};
+
+module.exports = { fetchGeminiMarketInsights };

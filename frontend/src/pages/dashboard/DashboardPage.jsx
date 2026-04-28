@@ -8,9 +8,7 @@ import './DashboardPage.css'
 const DashboardPage = ({ user }) => {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
-    trend: 'Bullish', sp500: 'S&P 500 +2.5%',
-    topPerformer: 'Tech Stocks', performance: '+15% Growth',
-    riskLevel: 'Moderate', riskSub: 'Monitor volatility',
+    trend: '—', sp500: '—', topPerformer: '—', performance: '—', riskLevel: '—', riskSub: '', news: [],
   });
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -25,12 +23,24 @@ const DashboardPage = ({ user }) => {
   const loadInsights = async () => {
     setLoading(true);
     try {
-      await new Promise(r => setTimeout(r, 600));
-      setDashboardData({ trend: 'Bullish', sp500: 'S&P 500 +2.5%', topPerformer: 'Tech Stocks', performance: '+15% Growth', riskLevel: 'Moderate', riskSub: 'Monitor volatility' });
+      const res = await fetch('/api/market-insights');
+      if (!res.ok) throw new Error('Failed to fetch market insights');
+      const payload = await res.json();
+      const data = payload.data ?? payload;
+      setDashboardData({
+        trend: data.trend ?? '—',
+        sp500: data.sp500 ?? data.performance ?? '—',
+        topPerformer: data.topPerformer ?? '—',
+        performance: data.performance ?? '—',
+        riskLevel: data.riskLevel ?? '—',
+        riskSub: data.riskSub ?? '',
+        news: Array.isArray(data.news) ? data.news : [],
+      });
       setLastUpdated(new Date());
-      setTimeout(() => renderCharts(), 80);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+      renderCharts();
+    } catch (err) {
+      console.error('Error loading market insights:', err);
+    } finally { setLoading(false); }
   };
 
   const renderCharts = () => {
@@ -119,23 +129,25 @@ const DashboardPage = ({ user }) => {
           <p className="page-subtitle">Latest updates from trusted sources</p>
         </div>
         <div className="dashboard-news-list">
-          {[
-            { thumb: 'news-thumb--1', title: 'Tech Stocks Rally as AI Innovation Continues to Drive Growth',       source: 'Financial Times', time: '2 hours ago' },
-            { thumb: 'news-thumb--2', title: 'S&P 500 Reaches New Heights Amid Strong Economic Data',              source: 'Bloomberg',       time: '4 hours ago' },
-            { thumb: 'news-thumb--3', title: 'Federal Reserve Signals Cautious Approach to Interest Rate Changes', source: 'Reuters',         time: '6 hours ago' },
-          ].map((n, i) => (
-            <article key={i} className="news-card">
-              <div className={`news-thumb ${n.thumb}`}></div>
+          {dashboardData.news.length > 0 ? dashboardData.news.map((n, i) => (
+            <article key={`${n.title ?? 'news'}-${i}`} className="news-card">
+              <div className={`news-thumb news-thumb--${(i % 3) + 1}`}></div>
               <div className="news-content">
-                <h3 className="news-title">{n.title}</h3>
+                <h3 className="news-title">{n.title ?? 'Market update'}</h3>
                 <div className="news-meta">
-                  <span className="news-source">{n.source}</span><span>&bull;</span>
-                  <span>{n.time}</span><span>&bull;</span>
-                  <span className="news-link"><i className="bi bi-box-arrow-up-right"></i></span>
+                  <span className="news-source">{n.source ?? 'Market Desk'}</span><span>&bull;</span>
+                  <span>{n.timeLabel ?? n.time ?? 'Recent'}</span><span>&bull;</span>
+                  <span className="news-link">
+                    <i className="bi bi-box-arrow-up-right"></i>
+                  </span>
                 </div>
               </div>
             </article>
-          ))}
+          )) : (
+            <div className="dashboard-panel" style={{ padding: '16px 18px' }}>
+              No market news available yet.
+            </div>
+          )}
         </div>
       </div>
 
