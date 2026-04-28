@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const MarketData = require('../models/MarketData');
-// 1. Changed the import to match the new Finnhub function
 const { fetchMarketInsights } = require('../services/financialApi');
 
 const buildRiskSub = (riskLevel) => {
@@ -19,6 +18,10 @@ const buildRiskSub = (riskLevel) => {
 const normalizeMarketData = (source = {}) => {
   const summary = source.summary || {};
   const news = Array.isArray(source.news) ? source.news : [];
+  
+  // 1. Safely extract the new charts data, or provide empty arrays as a fallback
+  const charts = source.charts || { sp500Trend: [], sectorPerformance: [] };
+  
   const trend = summary.trend || source.trend || 'Neutral';
   const topPerformer = summary.topPerformer || source.topPerformer || 'Market Leaders';
   const performance = summary.performanceReading || source.performance || source.sp500 || '—';
@@ -32,6 +35,7 @@ const normalizeMarketData = (source = {}) => {
     riskLevel,
     riskSub: buildRiskSub(riskLevel),
     news,
+    charts, // 2. Add charts to the final payload sent to the frontend!
     summary: {
       trend,
       topPerformer,
@@ -54,6 +58,7 @@ const saveMarketCache = async (dashboardData) => {
     {
       summary: dashboardData.summary,
       news: dashboardData.news,
+      charts: dashboardData.charts, // 3. Save the charts to your MongoDB cache
       lastFetched: dashboardData.lastFetched,
     },
     { upsert: true, new: true },
@@ -71,14 +76,12 @@ const getCachedMarketData = async () => {
 
 const getMarketInsights = async (req, res) => {
   try {
-    // 2. Call the new Finnhub function
     const apiData = await fetchMarketInsights();
     
     if (apiData) {
       const dashboardData = normalizeMarketData(apiData);
       await saveMarketCache(dashboardData);
 
-      // 3. Changed source label to 'finnhub' so your frontend knows it is live data
       return res.status(200).json({ success: true, data: dashboardData, source: 'finnhub' });
     }
 

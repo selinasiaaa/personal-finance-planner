@@ -1,20 +1,4 @@
-// No need for GoogleGenerativeAI anymore!
-
-const getFallbackMarketInsights = () => ({
-  summary: {
-    trend: 'Bullish',
-    topPerformer: 'Tech Stocks',
-    performanceReading: '+2.5%',
-    riskLevel: 'Moderate',
-  },
-  news: [
-    { title: 'Tech Stocks Rally as AI Innovation Continues to Drive Growth', source: 'Financial Times', timeLabel: '2 hours ago', link: '#' },
-    { title: 'S&P 500 Reaches New Heights Amid Strong Economic Data', source: 'Bloomberg', timeLabel: '4 hours ago', link: '#' },
-    { title: 'Federal Reserve Signals Cautious Approach to Interest Rate Changes', source: 'Reuters', timeLabel: '6 hours ago', link: '#' },
-  ],
-});
-
-const fetchFinnhubMarketInsights = async () => {
+const fetchMarketInsights = async () => {
   const apiKey = process.env.FINNHUB_API_KEY;
   
   if (!apiKey) {
@@ -23,48 +7,69 @@ const fetchFinnhubMarketInsights = async () => {
   }
 
   try {
-    // 1. Fetch S&P 500 (SPY) data to calculate the market summary
+    // 1. Fetch S&P 500 (SPY) for summary
     const quoteRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=SPY&token=${apiKey}`);
     const quoteData = await quoteRes.json();
-    
-    const percentChange = quoteData.dp; // Daily percentage change
+    const percentChange = quoteData.dp;
     const isPositive = percentChange >= 0;
 
-    // 2. Fetch the latest general market news
+    // 2. Fetch General Market News
     const newsRes = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${apiKey}`);
     const newsData = await newsRes.json();
-
-    // 3. Format the top 3 news items to match your UI's structure
     const formattedNews = newsData.slice(0, 3).map(item => {
-      // Finnhub returns timestamps in seconds. Calculate hours ago:
       const hoursAgo = Math.max(1, Math.floor((Date.now() / 1000 - item.datetime) / 3600));
-      
-      return {
-        title: item.headline,
-        source: item.source,
-        timeLabel: `${hoursAgo} hours ago`,
-        link: item.url
-      };
+      return { title: item.headline, source: item.source, timeLabel: `${hoursAgo} hours ago`, link: item.url };
     });
 
-    // 4. Return the fully structured, real-time data
+    // 3. NEW: Fetch 6 Months of Historical Data for the Line Chart
+    const toDate = Math.floor(Date.now() / 1000);
+    const fromDate = toDate - (6 * 30 * 24 * 60 * 60); // Roughly 6 months ago
+    const candleRes = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=M&from=${fromDate}&to=${toDate}&token=${apiKey}`);
+    const candleData = await candleRes.json();
+
+    let sp500History = [];
+    if (candleData.s === 'ok') {
+      sp500History = candleData.c.map((price, index) => ({
+        month: new Date(candleData.t[index] * 1000).toLocaleString('default', { month: 'short' }),
+        price: parseFloat(price.toFixed(2))
+      }));
+    }
+
+    // 4. NEW: Fetch Real-Time Sector Performance for the Bar Chart (Using major ETFs)
+    const sectors = [
+      { name: 'Tech', symbol: 'XLK' },
+      { name: 'Health', symbol: 'XLV' },
+      { name: 'Finance', symbol: 'XLF' },
+      { name: 'Energy', symbol: 'XLE' },
+      { name: 'Consumer', symbol: 'XLY' }
+    ];
+
+    // Fetch all 5 sector quotes at the exact same time
+    const sectorPromises = sectors.map(async (sector) => {
+      const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sector.symbol}&token=${apiKey}`);
+      const data = await res.json();
+      return { sector: sector.name, performance: data.dp };
+    });
+    const sectorPerformanceData = await Promise.all(sectorPromises);
+
+    // 5. Return everything packaged perfectly for your UI
     return {
       summary: {
         trend: isPositive ? 'Bullish' : 'Bearish',
         topPerformer: 'S&P 500 (SPY)',
         performanceReading: `${isPositive ? '+' : ''}${percentChange.toFixed(2)}%`,
-        // If the market swings more than 2% in a day, flag it as High risk
         riskLevel: Math.abs(percentChange) > 2 ? 'High' : 'Moderate' 
       },
-      news: formattedNews
+      news: formattedNews,
+      charts: {
+        sp500Trend: sp500History,
+        sectorPerformance: sectorPerformanceData
+      }
     };
 
   } catch (error) {
     console.error("Finnhub API Error:", error.message);
-    console.warn("Using fallback market data");
     return getFallbackMarketInsights();
   }
 };
-
-// Export the new function
-module.exports = { fetchMarketInsights: fetchFinnhubMarketInsights };
+module.exports = { fetchMarketInsights };

@@ -130,7 +130,14 @@ const DashboardPage = ({ user }) => {
         </div>
         <div className="dashboard-news-list">
           {dashboardData.news.length > 0 ? dashboardData.news.map((n, i) => (
-            <article key={`${n.title ?? 'news'}-${i}`} className="news-card">
+            <a
+              key={`${n.title ?? 'news'}-${i}`}
+              className="news-card"
+              href={n.link ?? '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'flex', textDecoration: 'none', color: 'inherit' }}
+            >
               <div className={`news-thumb news-thumb--${(i % 3) + 1}`}></div>
               <div className="news-content">
                 <h3 className="news-title">{n.title ?? 'Market update'}</h3>
@@ -142,7 +149,7 @@ const DashboardPage = ({ user }) => {
                   </span>
                 </div>
               </div>
-            </article>
+            </a>
           )) : (
             <div className="dashboard-panel" style={{ padding: '16px 18px' }}>
               No market news available yet.
