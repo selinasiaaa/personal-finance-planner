@@ -11,6 +11,10 @@ const DashboardPage = ({ user }) => {
     trend: '—', sp500: '—', topPerformer: '—', performance: '—', riskLevel: '—', riskSub: '', news: [],
     charts: { sp500Trend: [], sectorPerformance: [] },
     recommendations: [],
+    dataSource: 'unknown',
+    topStock: { symbol: 'N/A', company: 'No data', percentChange: 0, change: 0 },
+    isNewUpdate: false,
+    updatedFields: [],
   });
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -42,6 +46,10 @@ const DashboardPage = ({ user }) => {
           sectorPerformance: Array.isArray(data.charts?.sectorPerformance) ? data.charts.sectorPerformance : [],
         },
         recommendations: Array.isArray(data.recommendations) ? data.recommendations : [],
+        dataSource: data.dataSource ?? payload.source ?? 'live',
+        topStock: data.summary?.topStock ?? data.topStock ?? { symbol: 'N/A', company: 'No data', percentChange: 0, change: 0 },
+        isNewUpdate: !!data.isNewUpdate,
+        updatedFields: Array.isArray(data.updatedFields) ? data.updatedFields : [],
       });
       setLastUpdated(new Date());
       renderCharts(data.charts);
@@ -70,6 +78,32 @@ const DashboardPage = ({ user }) => {
     const trendFallbackLabels = buildRecentMonthLabels(6);
     const sectorLabels = sectorPerformance.map((item) => item.sector ?? '');
     const sectorValues = sectorPerformance.map((item) => Number(item.performance ?? 0));
+    const buildDynamicScale = (values) => {
+      if (!values.length) {
+        return { min: 0, max: 10, stepSize: 2.5 };
+      }
+
+      const rawMin = Math.min(...values);
+      const rawMax = Math.max(...values);
+      const padding = Math.max(0.5, (rawMax - rawMin) * 0.15);
+      let min = Math.floor((rawMin - padding) / 100) * 100;
+      let max = Math.ceil((rawMax + padding) / 100) * 100;
+
+      if (min === max) {
+        min = Math.max(0, min - 500);
+        max = max + 500;
+      }
+
+      const span = max - min;
+      let stepSize = 500;
+      if (span <= 1000) stepSize = 250;
+      else if (span <= 2000) stepSize = 500;
+      else if (span <= 5000) stepSize = 1000;
+      else stepSize = 2000;
+
+      return { min, max, stepSize };
+    };
+
     const buildSectorScale = (values) => {
       if (!values.length) {
         return { min: -5, max: 5, stepSize: 2.5 };
@@ -94,6 +128,8 @@ const DashboardPage = ({ user }) => {
 
       return { min, max, stepSize };
     };
+    
+    const trendScale = buildDynamicScale(trendValues.length > 0 ? trendValues : [4200, 4350, 4205, 4510, 4630, 4585]);
     const sectorScale = buildSectorScale(sectorValues.length > 0 ? sectorValues : [15, 8, 5, -2, 6, 4]);
 
     if (trendChartInst.current) trendChartInst.current.destroy();
@@ -113,18 +149,22 @@ const DashboardPage = ({ user }) => {
             fill: false,
           }],
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 6000, ticks: { stepSize: 1500, color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.18)' }, border: { display: false } }, x: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.18)' }, border: { display: false } } } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: trendScale.min, max: trendScale.max, ticks: { stepSize: trendScale.stepSize, color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.18)' }, border: { display: false } }, x: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.18)' }, border: { display: false } } } },
       });
     }
     if (sectorChartInst.current) sectorChartInst.current.destroy();
     if (sectorChartRef.current) {
+      const sectorColors = (sectorValues.length > 0 ? sectorValues : [15, 8, 5, -2, 6, 4]).map((value) => (
+        value >= 0 ? 'rgba(22,163,74,0.82)' : 'rgba(220,38,38,0.82)'
+      ));
       sectorChartInst.current = new Chart(sectorChartRef.current, {
         type: 'bar',
         data: {
-          labels: sectorLabels.length > 0 ? sectorLabels : ['Tech', 'Health', 'Finance', 'Energy', 'Industrial', 'Consumer'],
+          labels: sectorLabels.length > 0 ? sectorLabels : ['Banks & Financials', 'Technology', 'Plantation & Agriculture', 'Consumer Products', 'Healthcare'],
           datasets: [{
-            data: sectorValues.length > 0 ? sectorValues : [15, 8, 5, -2, 6, 4],
-            backgroundColor: '#3b6eff',
+            data: sectorValues.length > 0 ? sectorValues : [5, 3.5, 2.5, -1.5, 1.8],
+            backgroundColor: sectorColors,
+            borderColor: sectorColors,
             borderRadius: 8,
             borderSkipped: false,
           }],
@@ -145,6 +185,18 @@ const DashboardPage = ({ user }) => {
         <div>
           <h1 className="page-title">Market Insights Dashboard</h1>
           <p className="page-subtitle">Real-time market data and analysis</p>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center' }}>
+            <div className="dashboard-inline-highlight">
+              <i className={`bi ${dashboardData.dataSource === 'fallback' ? 'bi-exclamation-triangle' : 'bi-check-circle'}`}></i>
+              <span>{dashboardData.dataSource === 'fallback' ? 'Fallback data is being used' : 'Live data is being used'}</span>
+            </div>
+            {dashboardData.isNewUpdate && (
+              <div className="dashboard-inline-highlight" style={{ background: '#fffbeb', color: '#92400e' }}>
+                <i className="bi bi-bell"></i>
+                <span>New update</span>
+              </div>
+            )}
+          </div>
         </div>
         <button type="button" className="btn-primary-action" onClick={loadInsights} disabled={loading}>
           <i className="bi bi-arrow-clockwise"></i>{loading ? 'Refreshing...' : 'Refresh Insights'}
@@ -153,12 +205,31 @@ const DashboardPage = ({ user }) => {
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-        {[
-          { label: 'Market Trend',   value: dashboardData.trend,        sub: dashboardData.sp500,       bg: '#eaf7ef', color: '#2563eb', icon: 'bi-graph-up-arrow',     emphasis: 'summary-emphasis-green' },
-          { label: 'Top Performer',  value: dashboardData.topPerformer, sub: dashboardData.performance, bg: '#e9efff', color: '#2563eb', icon: 'bi-award',               emphasis: 'summary-emphasis-green' },
-          { label: 'Risk Level',     value: dashboardData.riskLevel,    sub: dashboardData.riskSub,     bg: '#fff2e8', color: '#2563eb', icon: 'bi-exclamation-triangle', emphasis: 'summary-emphasis-dark'  },
-        ].map(({ label, value, sub, bg, color, icon, emphasis }) => (
-          <div key={label} style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: '18px', padding: '22px 24px', boxShadow: '0 2px 16px rgba(59,110,255,.07)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+          {[
+          { label: "Today Malaysia Stock Index Trend", value: dashboardData.trend, sub: dashboardData.sp500, bg: '#eaf7ef', color: '#2563eb', icon: 'bi-graph-up-arrow',     emphasis: 'summary-emphasis-green', link: 'https://www.bursamalaysia.com/', clickable: true },
+          { label: 'Top Performer Sector', value: dashboardData.topPerformer, sub: dashboardData.performance, bg: '#e9efff', color: '#2563eb', icon: 'bi-award',               emphasis: 'summary-emphasis-green', link: null, clickable: false },
+          { label: 'Market Risk',    value: dashboardData.riskLevel,    sub: dashboardData.riskSub,     bg: '#fff2e8', color: '#2563eb', icon: 'bi-exclamation-triangle', emphasis: 'summary-emphasis-dark', link: null, clickable: false  },
+        ].map(({ label, value, sub, bg, color, icon, emphasis, link, clickable }) => (
+          <div 
+            key={label} 
+            onClick={() => clickable && link && window.open(link, '_blank')}
+            style={{ 
+              background: '#fff', 
+              border: '1.5px solid var(--border)', 
+              borderRadius: '18px', 
+              padding: '22px 24px', 
+              boxShadow: '0 2px 16px rgba(59,110,255,.07)', 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              justifyContent: 'space-between', 
+              gap: '16px',
+              cursor: clickable ? 'pointer' : 'default',
+              transition: 'all 0.2s ease',
+              opacity: 1,
+            }}
+            onMouseEnter={(e) => clickable && (e.currentTarget.style.boxShadow = '0 8px 24px rgba(59,110,255,.15)', e.currentTarget.style.transform = 'translateY(-2px)')}
+            onMouseLeave={(e) => clickable && (e.currentTarget.style.boxShadow = '0 2px 16px rgba(59,110,255,.07)', e.currentTarget.style.transform = 'translateY(0)')}
+          >
             <div>
               <p className="summary-label">{label}</p>
               <h2 className={`summary-value ${emphasis}`}>{value}</h2>
@@ -172,16 +243,21 @@ const DashboardPage = ({ user }) => {
       {/* API Summary Panel */}
       <div className="dashboard-panel" style={{ marginBottom: '20px' }}>
         <div className="insight-card-head">
-          <h3 className="section-title-sm mb-0">API-driven Summary</h3>
-          <span className="insight-pill">{dashboardData.riskLevel} Risk</span>
+          <h3 className="section-title-sm mb-0">Market Summary</h3>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span className="insight-pill">{dashboardData.riskLevel} Risk</span>
+            <span className="insight-pill" style={{ background: dashboardData.dataSource === 'fallback' ? '#fff2e8' : '#eaf7ef', color: dashboardData.dataSource === 'fallback' ? '#b45309' : '#166534' }}>
+              {dashboardData.dataSource === 'fallback' ? 'Fallback' : 'Live'}
+            </span>
+          </div>
         </div>
         <div className="dashboard-summary-grid">
-          <div className="dashboard-summary-item">
-            <span className="insight-label">Trend Signal</span>
+          <div className="dashboard-summary-item" style={{ cursor: 'pointer', transition: 'all 0.2s ease' }} onClick={() => window.open('https://www.bursamalaysia.com/', '_blank')} onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')} onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}>
+            <span className="insight-label">Today Malaysia Stock Index Change</span>
             <div className="dashboard-inline-highlight"><i className="bi bi-arrow-up-right"></i><span>{dashboardData.trend}</span></div>
           </div>
           <div className="dashboard-summary-item">
-            <span className="insight-label">Top Performing Segment</span>
+            <span className="insight-label">Top Performer Sector</span>
             <strong className="insight-value">{dashboardData.topPerformer}</strong>
           </div>
           <div className="dashboard-summary-item">
@@ -197,8 +273,11 @@ const DashboardPage = ({ user }) => {
       {/* Financial News */}
       <div style={{ marginBottom: '20px' }}>
         <div className="dashboard-section-header dashboard-section-header--stacked">
-          <h2 className="dashboard-section-title">Financial News</h2>
-          <p className="page-subtitle">Latest updates from trusted sources</p>
+          <h2 className="dashboard-section-title">Market News</h2>
+          <p className="page-subtitle">Latest headlines relevant to global market moves</p>
+          <span className="insight-pill" style={{ alignSelf: 'flex-start', background: dashboardData.news.length > 0 ? '#eaf7ef' : '#fff2e8', color: dashboardData.news.length > 0 ? '#166534' : '#b45309' }}>
+            {dashboardData.news.length > 0 ? 'Live news' : 'Fallback news'}
+          </span>
         </div>
         <div className="dashboard-news-list">
           {dashboardData.news.length > 0 ? dashboardData.news.map((n, i) => (
@@ -233,16 +312,19 @@ const DashboardPage = ({ user }) => {
       {/* Charts */}
       <div style={{ marginBottom: '20px' }}>
         <div className="dashboard-section-header dashboard-section-header--stacked">
-          <h2 className="dashboard-section-title">Market Trends Visualization</h2>
-          <p className="page-subtitle">Historical performance and sector analysis</p>
+          <h2 className="dashboard-section-title">Market Trends</h2>
+          <p className="page-subtitle">Historical movement and sector comparison</p>
+          <span className="insight-pill" style={{ alignSelf: 'flex-start', background: '#eaf7ef', color: '#166534' }}>
+            Chart data: {dashboardData.charts.sp500Trend.length > 0 ? 'Live' : 'Fallback'}
+          </span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div className="dashboard-panel chart-panel">
-            <h3 className="section-title-sm">S&amp;P 500 Trend (2026)</h3>
+            <h3 className="section-title-sm">Malaysia Market Index (FBM KLCI)</h3>
             <div className="chart-wrapper"><canvas ref={trendChartRef}></canvas></div>
           </div>
           <div className="dashboard-panel chart-panel">
-            <h3 className="section-title-sm">Sector Performance Comparison</h3>
+            <h3 className="section-title-sm">Sector Performance</h3>
             <div className="chart-wrapper"><canvas ref={sectorChartRef}></canvas></div>
           </div>
         </div>

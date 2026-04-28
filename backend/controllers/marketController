@@ -16,11 +16,13 @@ const buildRiskSub = (riskLevel) => {
 };
 
 const buildRecommendations = (summary = {}, news = []) => {
-  const trend = (summary.trend || '').toLowerCase();
+  const trend = (summary.trendDirection || '').toLowerCase();
   const riskLevel = (summary.riskLevel || '').toLowerCase();
   const topPerformer = summary.topPerformer || 'the leading sector';
+  const topStock = summary.topStock || null;
   const performance = summary.performanceReading || '0%';
   const firstHeadline = news[0]?.title || 'the latest market updates';
+   const marketName = summary.marketName || 'Malaysia Market Overview';
 
   const recommendations = [];
 
@@ -28,7 +30,7 @@ const buildRecommendations = (summary = {}, news = []) => {
     recommendations.push({
       icon: 'bi-graph-up-arrow',
       title: 'Ride the Trend',
-      text: `Market sentiment is positive. Consider reviewing growth exposure around ${topPerformer}.`,
+       text: `${marketName} is positive. Consider reviewing growth exposure around ${topPerformer}${topStock ? ` and monitor ${topStock.company}` : ''}.`,
       warn: false,
     });
   } else if (trend === 'bearish') {
@@ -42,7 +44,7 @@ const buildRecommendations = (summary = {}, news = []) => {
     recommendations.push({
       icon: 'bi-easel2',
       title: 'Stay Balanced',
-      text: `The market is neutral. Keep a balanced allocation and monitor ${topPerformer}.`,
+       text: `${marketName} is neutral. Keep a balanced allocation and monitor ${topPerformer}${topStock ? ` and ${topStock.company}` : ''}.`,
       warn: false,
     });
   }
@@ -50,14 +52,14 @@ const buildRecommendations = (summary = {}, news = []) => {
   recommendations.push({
     icon: 'bi-bar-chart-line',
     title: 'Review Allocation',
-    text: `Compare your portfolio against ${topPerformer} and recent performance at ${performance}.`,
+    text: `Compare your portfolio against ${topPerformer}${topStock ? ` and ${topStock.company}` : ''} and recent performance at ${performance}.`,
     warn: false,
   });
 
   recommendations.push({
     icon: 'bi-newspaper',
     title: 'Read the Latest News',
-    text: `Check the latest headline: ${firstHeadline}. Use it to confirm the current market direction.`,
+     text: `Check the latest headline: ${firstHeadline}. Use it to confirm the current market direction.`,
     warn: false,
   });
 
@@ -94,13 +96,18 @@ const normalizeMarketData = (source = {}) => {
   // 1. Safely extract the new charts data, or provide empty arrays as a fallback
   const charts = source.charts || { sp500Trend: [], sectorPerformance: [] };
   
-  const trend = summary.trend || source.trend || 'Neutral';
+  const trend = summary.trend || source.trend || '+0 pts';
+  const weeklyTrend = null;
+  const trendDirection = summary.trendDirection || source.trendDirection || 'Neutral';
   const topPerformer = summary.topPerformer || source.topPerformer || 'Market Leaders';
   const performance = summary.performanceReading || source.performance || source.sp500 || '—';
+  const topStock = summary.topStock || source.topStock || { symbol: 'N/A', company: 'No data', percentChange: 0, change: 0 };
   const riskLevel = summary.riskLevel || source.riskLevel || 'Moderate';
+  const dataSource = source.dataSource || 'live';
 
   return {
     trend,
+    trendDirection,
     sp500: source.sp500 || performance,
     topPerformer,
     performance,
@@ -111,10 +118,14 @@ const normalizeMarketData = (source = {}) => {
     recommendations: buildRecommendations({ trend, topPerformer, performanceReading: performance, riskLevel }, news),
     summary: {
       trend,
+      trendDirection,
       topPerformer,
       performanceReading: performance,
       riskLevel,
+      marketName: source.summary?.marketName || source.marketName || 'Market Overview',
+      topStock,
     },
+    dataSource,
     lastFetched: source.lastFetched || new Date().toISOString(),
   };
 };
@@ -149,22 +160,48 @@ const getCachedMarketData = async () => {
 
 const getMarketInsights = async (req, res) => {
   try {
+    // Try to fetch cached data first (if available) so we can detect whether the new fetch produces a meaningful update
+    const cachedRaw = await getCachedMarketData();
+    const cached = cachedRaw || null;
+
     const apiData = await fetchMarketInsights();
-    
-    if (apiData) {
-      const dashboardData = normalizeMarketData(apiData);
-      await saveMarketCache(dashboardData);
-
-      return res.status(200).json({ success: true, data: dashboardData, source: 'finnhub' });
+    if (!apiData) {
+      if (cached) return res.status(200).json({ success: true, data: cached, source: 'cache' });
+      return res.status(503).json({ success: false, message: 'No market insights available yet.' });
     }
 
-    const cachedData = await getCachedMarketData();
+    const live = normalizeMarketData(apiData);
 
-    if (cachedData) {
-      return res.status(200).json({ success: true, data: cachedData, source: 'cache' });
+    // Determine which parts changed vs cache so the frontend can decide how to update UI
+    const updatedFields = [];
+    if (!cached) {
+      updatedFields.push('all');
+    } else {
+      // Compare summary topStock (symbol) and trendValue for quick detection
+      if (JSON.stringify(live.summary?.topStock) !== JSON.stringify(cached.summary?.topStock)) updatedFields.push('topStock');
+      if ((live.trend !== cached.trend) || (live.trendDirection !== cached.trendDirection)) updatedFields.push('trend');
+      // Compare news titles
+      const liveNewsTitles = (live.news || []).map(n => n.title).join('|');
+      const cachedNewsTitles = (cached.news || []).map(n => n.title).join('|');
+      if (liveNewsTitles !== cachedNewsTitles) updatedFields.push('news');
+      // Compare charts briefly by last point value
+      const liveLast = (live.charts?.sp500Trend || []).slice(-1)[0]?.price ?? null;
+      const cachedLast = (cached.charts?.sp500Trend || []).slice(-1)[0]?.price ?? null;
+      if (liveLast !== cachedLast) updatedFields.push('charts');
+      // If topPerformer or performance reading changed, flag recommendations update
+      if (live.topPerformer !== cached.topPerformer || live.performance !== cached.performance) updatedFields.push('recommendations');
     }
 
-    return res.status(503).json({ success: false, message: 'No market insights available yet.' });
+    const isNewUpdate = updatedFields.length > 0;
+
+    // Save the fresh live result into cache (if possible)
+    await saveMarketCache(live);
+
+    // Attach update metadata for frontend
+    live.isNewUpdate = isNewUpdate;
+    live.updatedFields = updatedFields;
+
+    return res.status(200).json({ success: true, data: live, source: live.dataSource });
 
   } catch (error) {
     console.error(`Controller Error: ${error.message}`);
