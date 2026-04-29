@@ -10,13 +10,122 @@ const getFallbackMarketInsights = () => ({
     marketName: 'Malaysia Market Overview',
     topStock: { symbol: 'N/A', company: 'No data', percentChange: 0, change: 0 }
   },
+  globalView: {
+    indexTrend: '+0.00% (+0.00 pts)',
+    indexValue: 'S&P 500 0.00',
+    topGlobalSector: 'Information Technology',
+    vix: '20.00',
+    riskLevel: 'Moderate',
+    lastUpdated: new Date().toISOString(),
+    dataSource: 'fallback',
+  },
   news: [],
   charts: { sp500Trend: [], sectorPerformance: [] }
 });
 
+const toNum = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const buildRiskFromVix = (vixValue) => {
+  if (vixValue == null) return 'Moderate';
+  if (vixValue < 15) return 'Low';
+  if (vixValue <= 25) return 'Moderate';
+  return 'High';
+};
+
+const fetchYahooQuote = async (symbol) => {
+  const encodedSymbol = encodeURIComponent(symbol);
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?range=5d&interval=1d`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+
+  const payload = await res.json();
+  const result = payload?.chart?.result?.[0];
+  if (!result) return null;
+
+  const quote = result?.indicators?.quote?.[0] || {};
+  const closes = Array.isArray(quote.close) ? quote.close.filter((c) => toNum(c) != null) : [];
+  const latestClose = closes.length > 0 ? toNum(closes[closes.length - 1]) : null;
+  const prevClose = toNum(result?.meta?.chartPreviousClose) ?? (closes.length > 1 ? toNum(closes[closes.length - 2]) : null);
+  const change = latestClose != null && prevClose != null ? latestClose - prevClose : null;
+  const changePct = latestClose != null && prevClose ? (change / prevClose) * 100 : null;
+
+  return {
+    latestClose,
+    prevClose,
+    change,
+    changePct,
+  };
+};
+
+const fetchTopGlobalSector = async () => {
+  try {
+    const res = await fetch('https://www.alphavantage.co/query?function=SECTOR&apikey=demo');
+    if (!res.ok) return null;
+    const data = await res.json();
+    const realTimePerf = data?.['Rank A: Real-Time Performance'];
+    if (!realTimePerf || typeof realTimePerf !== 'object') return null;
+
+    let bestSector = null;
+    let bestValue = -Infinity;
+    Object.entries(realTimePerf).forEach(([sector, pct]) => {
+      const val = toNum(String(pct).replace('%', '').trim());
+      if (val != null && val > bestValue) {
+        bestValue = val;
+        bestSector = sector;
+      }
+    });
+
+    return bestSector;
+  } catch (error) {
+    return null;
+  }
+};
+
+const fetchGlobalMarketView = async () => {
+  try {
+    const [sp500Quote, vixQuote, topSector] = await Promise.all([
+      fetchYahooQuote('^GSPC'),
+      fetchYahooQuote('^VIX'),
+      fetchTopGlobalSector(),
+    ]);
+
+    const spClose = sp500Quote?.latestClose;
+    const spChange = sp500Quote?.change;
+    const spChangePct = sp500Quote?.changePct;
+    const vixValue = vixQuote?.latestClose;
+
+    const hasLive = spClose != null || vixValue != null || Boolean(topSector);
+
+    return {
+      indexTrend: spChange != null && spChangePct != null
+        ? `${spChangePct >= 0 ? '+' : ''}${spChangePct.toFixed(2)}% (${spChange >= 0 ? '+' : ''}${spChange.toFixed(2)} pts)`
+        : '+0.00% (+0.00 pts)',
+      indexValue: spClose != null ? `S&P 500 ${spClose.toFixed(2)}` : 'S&P 500 0.00',
+      topGlobalSector: topSector || 'Information Technology',
+      vix: vixValue != null ? vixValue.toFixed(2) : '20.00',
+      riskLevel: buildRiskFromVix(vixValue),
+      lastUpdated: new Date().toISOString(),
+      dataSource: hasLive ? 'live' : 'fallback',
+    };
+  } catch (error) {
+    return {
+      indexTrend: '+0.00% (+0.00 pts)',
+      indexValue: 'S&P 500 0.00',
+      topGlobalSector: 'Information Technology',
+      vix: '20.00',
+      riskLevel: 'Moderate',
+      lastUpdated: new Date().toISOString(),
+      dataSource: 'fallback',
+    };
+  }
+};
+
 const fetchMarketInsights = async () => {
-  const newsApiKey = process.env.NEWS_API_KEY; 
-  
+  const newsApiKey = process.env.NEWS_API_KEY;
+
   try {
     // 1. REAL DATA: Fetch news with fallback chain (Malaysia first, then Global)
     let formattedNews = [];
@@ -25,17 +134,17 @@ const fetchMarketInsights = async () => {
         // Try Malaysia-specific news first
         const malaysiaRes = await fetch(`https://newsapi.org/v2/top-headlines?country=my&category=business&apiKey=${newsApiKey}`);
         const malaysiaData = await malaysiaRes.json();
-        
+
         if (malaysiaData.articles && malaysiaData.articles.length > 0) {
           formattedNews = malaysiaData.articles.slice(0, 3).map(article => {
             const publishedTime = new Date(article.publishedAt).getTime();
             const hoursAgo = Math.max(1, Math.floor((Date.now() - publishedTime) / (1000 * 3600)));
-            
-            return { 
-              title: article.title, 
-              source: article.source.name, 
-              timeLabel: `${hoursAgo} hours ago`, 
-              link: article.url 
+
+            return {
+              title: article.title,
+              source: article.source.name,
+              timeLabel: `${hoursAgo} hours ago`,
+              link: article.url
             };
           });
         } else {
@@ -43,17 +152,17 @@ const fetchMarketInsights = async () => {
           console.info("No Malaysia-specific news found, fetching global business news...");
           const globalRes = await fetch(`https://newsapi.org/v2/top-headlines?category=business&apiKey=${newsApiKey}`);
           const globalData = await globalRes.json();
-          
+
           if (globalData.articles && globalData.articles.length > 0) {
             formattedNews = globalData.articles.slice(0, 3).map(article => {
               const publishedTime = new Date(article.publishedAt).getTime();
               const hoursAgo = Math.max(1, Math.floor((Date.now() - publishedTime) / (1000 * 3600)));
-              
-              return { 
-                title: article.title, 
-                source: article.source.name, 
-                timeLabel: `${hoursAgo} hours ago`, 
-                link: article.url 
+
+              return {
+                title: article.title,
+                source: article.source.name,
+                timeLabel: `${hoursAgo} hours ago`,
+                link: article.url
               };
             });
           }
@@ -91,7 +200,7 @@ const fetchMarketInsights = async () => {
     ];
 
     // Find top performer sector (just the sector name)
-    const topPerformerSector = bursaPerformanceData.reduce((max, curr) => 
+    const topPerformerSector = bursaPerformanceData.reduce((max, curr) =>
       curr.performance > max.performance ? curr : max
     );
 
@@ -105,6 +214,8 @@ const fetchMarketInsights = async () => {
     ];
 
     const topStock = mockStocks.reduce((best, s) => (s.percentChange > best.percentChange ? s : best), mockStocks[0]);
+
+    const globalView = await fetchGlobalMarketView();
 
     // 4. Return the packaged payload for your UI
     return {
@@ -121,9 +232,10 @@ const fetchMarketInsights = async () => {
         // surface the top stock (company with highest percent gain) for the Market Summary
         topStock: topStock,
       },
+      globalView,
       news: formattedNews,
       charts: {
-        sp500Trend: klciHistory, 
+        sp500Trend: klciHistory,
         sectorPerformance: bursaPerformanceData
       },
       lastFetched: new Date().toISOString(),

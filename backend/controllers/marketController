@@ -22,7 +22,7 @@ const buildRecommendations = (summary = {}, news = []) => {
   const topStock = summary.topStock || null;
   const performance = summary.performanceReading || '0%';
   const firstHeadline = news[0]?.title || 'the latest market updates';
-   const marketName = summary.marketName || 'Malaysia Market Overview';
+  const marketName = summary.marketName || 'Malaysia Market Overview';
 
   const recommendations = [];
 
@@ -30,7 +30,7 @@ const buildRecommendations = (summary = {}, news = []) => {
     recommendations.push({
       icon: 'bi-graph-up-arrow',
       title: 'Ride the Trend',
-       text: `${marketName} is positive. Consider reviewing growth exposure around ${topPerformer}${topStock ? ` and monitor ${topStock.company}` : ''}.`,
+      text: `${marketName} is positive. Consider reviewing growth exposure around ${topPerformer}${topStock ? ` and monitor ${topStock.company}` : ''}.`,
       warn: false,
     });
   } else if (trend === 'bearish') {
@@ -44,7 +44,7 @@ const buildRecommendations = (summary = {}, news = []) => {
     recommendations.push({
       icon: 'bi-easel2',
       title: 'Stay Balanced',
-       text: `${marketName} is neutral. Keep a balanced allocation and monitor ${topPerformer}${topStock ? ` and ${topStock.company}` : ''}.`,
+      text: `${marketName} is neutral. Keep a balanced allocation and monitor ${topPerformer}${topStock ? ` and ${topStock.company}` : ''}.`,
       warn: false,
     });
   }
@@ -59,7 +59,7 @@ const buildRecommendations = (summary = {}, news = []) => {
   recommendations.push({
     icon: 'bi-newspaper',
     title: 'Read the Latest News',
-     text: `Check the latest headline: ${firstHeadline}. Use it to confirm the current market direction.`,
+    text: `Check the latest headline: ${firstHeadline}. Use it to confirm the current market direction.`,
     warn: false,
   });
 
@@ -92,10 +92,11 @@ const buildRecommendations = (summary = {}, news = []) => {
 const normalizeMarketData = (source = {}) => {
   const summary = source.summary || {};
   const news = Array.isArray(source.news) ? source.news : [];
-  
+  const globalView = source.globalView || {};
+
   // 1. Safely extract the new charts data, or provide empty arrays as a fallback
   const charts = source.charts || { sp500Trend: [], sectorPerformance: [] };
-  
+
   const trend = summary.trend || source.trend || '+0 pts';
   const weeklyTrend = null;
   const trendDirection = summary.trendDirection || source.trendDirection || 'Neutral';
@@ -104,6 +105,15 @@ const normalizeMarketData = (source = {}) => {
   const topStock = summary.topStock || source.topStock || { symbol: 'N/A', company: 'No data', percentChange: 0, change: 0 };
   const riskLevel = summary.riskLevel || source.riskLevel || 'Moderate';
   const dataSource = source.dataSource || 'live';
+  const normalizedGlobalView = {
+    indexTrend: globalView.indexTrend || '+0.00% (+0.00 pts)',
+    indexValue: globalView.indexValue || 'S&P 500 0.00',
+    topGlobalSector: globalView.topGlobalSector || 'Information Technology',
+    vix: globalView.vix || '20.00',
+    riskLevel: globalView.riskLevel || 'Moderate',
+    lastUpdated: globalView.lastUpdated || source.lastFetched || new Date().toISOString(),
+    dataSource: globalView.dataSource || dataSource,
+  };
 
   return {
     trend,
@@ -115,6 +125,7 @@ const normalizeMarketData = (source = {}) => {
     riskSub: buildRiskSub(riskLevel),
     news,
     charts, // 2. Add charts to the final payload sent to the frontend!
+    globalView: normalizedGlobalView,
     recommendations: buildRecommendations({ trend, topPerformer, performanceReading: performance, riskLevel }, news),
     summary: {
       trend,
@@ -143,6 +154,7 @@ const saveMarketCache = async (dashboardData) => {
       summary: dashboardData.summary,
       news: dashboardData.news,
       charts: dashboardData.charts, // 3. Save the charts to your MongoDB cache
+      globalView: dashboardData.globalView,
       lastFetched: dashboardData.lastFetched,
     },
     { upsert: true, new: true },
@@ -188,6 +200,7 @@ const getMarketInsights = async (req, res) => {
       const liveLast = (live.charts?.sp500Trend || []).slice(-1)[0]?.price ?? null;
       const cachedLast = (cached.charts?.sp500Trend || []).slice(-1)[0]?.price ?? null;
       if (liveLast !== cachedLast) updatedFields.push('charts');
+      if (JSON.stringify(live.globalView) !== JSON.stringify(cached.globalView)) updatedFields.push('globalView');
       // If topPerformer or performance reading changed, flag recommendations update
       if (live.topPerformer !== cached.topPerformer || live.performance !== cached.performance) updatedFields.push('recommendations');
     }
