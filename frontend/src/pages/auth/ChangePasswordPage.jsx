@@ -22,7 +22,14 @@ const ChangePasswordPage = ({ user }) => {
     if (formData.newPassword !== formData.confirmNewPassword) { setError('New password and confirm password do not match.'); return; }
     setLoading(true);
     try {
-      const data = await apiRequest('/api/change-password', { method: 'POST', body: JSON.stringify({ email: user.email, currentPassword: formData.currentPassword, newPassword: formData.newPassword }) });
+      const data = await apiRequest('/api/auth/change-password', { 
+        method: 'POST', 
+        body: JSON.stringify({ 
+          email: user.email, 
+          currentPassword: formData.currentPassword, 
+          newPassword: formData.newPassword 
+        }) 
+      });
       setSuccess(data?.message || 'Password changed successfully.');
       setTimeout(() => navigate('/profile'), 1500);
     } catch (err) {

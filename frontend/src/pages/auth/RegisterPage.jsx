@@ -23,7 +23,7 @@ const RegisterPage = () => {
     if (!formData.agreeTerms)                        { setError('You must agree to the terms.');                                         return; }
     setLoading(true);
     try {
-      await apiRequest('/api/register', { method: 'POST', body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password }) });
+      await apiRequest('/api/auth/register', { method: 'POST', body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password }) });
       alert('Registration successful. You can sign in now.');
       navigate('/login');
     } catch (err) {

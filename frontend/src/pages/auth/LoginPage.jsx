@@ -20,7 +20,7 @@ const LoginPage = () => {
     if (!formData.password)            { setError('Please enter your password.');          return; }
     setLoading(true);
     try {
-      const user = await apiRequest('/api/login', { method: 'POST', body: JSON.stringify({ email: formData.email, password: formData.password }) });
+      const user = await apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: formData.email, password: formData.password }) });
       setStoredUser(user, formData.rememberMe);
       navigate('/');
     } catch (err) {
