@@ -17,7 +17,7 @@ const ForgotPasswordPage = () => {
     if (!isValidEmail(email)) { setError('Please enter a valid email address.'); return; }
     setLoading(true);
     try {
-      const data = await apiRequest('/api/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+      const data = await apiRequest('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
       setSuccess(data?.message || 'Reset link sent to your email.');
       setEmail('');
     } catch (err) {

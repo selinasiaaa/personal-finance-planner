@@ -25,7 +25,7 @@ const ProfilePage = ({ user, setUser }) => {
     if (!isValidEmail(profileData.email)) { setError('Please enter a valid email address.'); return; }
     setLoading(true);
     try {
-      const updatedUser = await apiRequest('/api/profile', { method: 'PUT', body: JSON.stringify(profileData) });
+      const updatedUser = await apiRequest('/api/users/profile', { method: 'PUT', body: JSON.stringify(profileData) });
       const rememberSession = Boolean(localStorage.getItem('user'));
       const newUser = { ...user, ...updatedUser };
       setStoredUser(newUser, rememberSession);
@@ -41,7 +41,7 @@ const ProfilePage = ({ user, setUser }) => {
   const handleDeleteAccount = async () => {
     if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
     try {
-      await apiRequest('/api/profile', { method: 'DELETE' });
+      await apiRequest('/api/users/profile', { method: 'DELETE' });
       clearStoredUser(); navigate('/register');
     } catch (err) { alert(err.message || 'Delete failed.'); }
   };

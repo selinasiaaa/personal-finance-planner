@@ -4,12 +4,18 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { getMarketInsights } = require('./controllers/marketController');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3001;
+
+const User = require('./models/User')
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // 1. Your new "Front Door" route correctly placed AFTER app is defined
 app.get('/', (req, res) => {
@@ -62,93 +68,6 @@ app.put('/api/goals/:id/apply-portfolio', (req, res) => {
   }
 
   return res.json(goal);
-});
-
-const users = []; // In-memory user store for demo
-
-// User Registration
-app.post('/api/register', (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'All fields required' });
-  }
-  const existing = users.find(u => u.email === email);
-  if (existing) {
-    return res.status(400).json({ message: 'User already exists' });
-  }
-  const user = { id: users.length + 1, name, email, password }; // In real app, hash password
-  users.push(user);
-  res.status(201).json({ id: user.id, name, email });
-});
-
-// User Login
-app.post('/api/login', (req, res) => {
-  const { email, password } = req.body;
-  const user = users.find(u => u.email === email && u.password === password);
-  if (!user) {
-    return res.status(401).json({ message: 'Invalid credentials' });
-  }
-  res.json({ id: user.id, name: user.name, email: user.email });
-});
-
-app.post('/api/change-password', (req, res) => {
-  const { email, currentPassword, newPassword } = req.body;
-
-  if (!email || !currentPassword || !newPassword) {
-    return res.status(400).json({ message: 'Email, current password, and new password are required.' });
-  }
-
-  const user = users.find(u => u.email === email);
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-
-  if (user.password !== currentPassword) {
-    return res.status(400).json({ message: 'Current password is incorrect.' });
-  }
-
-  user.password = newPassword;
-  return res.json({ message: 'Password changed successfully.' });
-});
-
-// Forgot Password (mock)
-app.post('/api/forgot-password', (req, res) => {
-  const { email } = req.body;
-  const user = users.find(u => u.email === email);
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-  // In real app, send email
-  res.json({ message: 'Reset link sent' });
-});
-
-// Profile Management
-app.put('/api/profile', (req, res) => {
-  // Assume user is authenticated, for demo use first user
-  const { name, email, phone, dob, occupation, address, city, country } = req.body;
-  if (users.length > 0) {
-    users[0].name = name;
-    users[0].email = email;
-    users[0].phone = phone;
-    users[0].dob = dob;
-    users[0].occupation = occupation;
-    users[0].address = address;
-    users[0].city = city;
-    users[0].country = country;
-    res.json(users[0]);
-  } else {
-    res.status(404).json({ message: 'User not found' });
-  }
-});
-
-app.delete('/api/profile', (req, res) => {
-  // Delete user
-  if (users.length > 0) {
-    users.splice(0, 1);
-    res.json({ message: 'Account deleted' });
-  } else {
-    res.status(404).json({ message: 'User not found' });
-  }
 });
 
 app.listen(PORT, () => {

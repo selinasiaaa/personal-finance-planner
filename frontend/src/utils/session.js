@@ -28,10 +28,13 @@ export const clearStoredUser = () => {
 }
 
 export const apiRequest = async (path, options = {}) => {
+  const user = getStoredUser();
+  const token = user?.token;
   const config = {
     ...options,
     headers: {
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { 'Authorization': `Bearer ${token}`} : {}),
       ...(options.headers || {}),
     },
   }
