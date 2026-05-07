@@ -16,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/goals', require('./routes/goalRoutes'));
 
 // 1. Your new "Front Door" route correctly placed AFTER app is defined
 app.get('/', (req, res) => {
