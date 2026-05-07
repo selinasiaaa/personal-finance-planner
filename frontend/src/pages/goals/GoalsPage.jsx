@@ -61,7 +61,7 @@ const GoalsPage = ({ user }) => {
   return (
     <div className="main-content">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="header-container">
         <h1 className="page-title">Financial Goals</h1>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="search-box">
@@ -73,7 +73,7 @@ const GoalsPage = ({ user }) => {
       </div>
 
       {/* Summary cards — equal CSS grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
+      <div className="grid-4col mb-5">
         <div className="summary-card summary-blue">
           <p className="summary-label">Total Saved</p>
           <p className="summary-value">RM 384,800</p>
@@ -104,21 +104,21 @@ const GoalsPage = ({ user }) => {
 
       {/* Filter tabs */}
       <div className="filter-tabs mb-4">
-        {['all', 'on-track', 'at-risk', 'high-risk', 'completed'].map(f => (
-          <button key={f} className={`filter-tab ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-            {f === 'all' ? 'All Goals' : f === 'on-track' ? 'On Track' : f === 'at-risk' ? 'At Risk' : f === 'high-risk' ? 'High Risk' : 'Completed'}
+        {GOAL_FILTERS.map(f => (
+          <button key={f.value} className={`filter-tab ${filter === f.value ? 'active' : ''}`} onClick={() => setFilter(f.value)}>
+            {f.label}
           </button>
         ))}
       </div>
 
       {/* Goal cards — CSS grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      <div className="grid-3col">
         {filteredGoals.map(goal => (
           <div key={goal.id} className="goal-card">
             <div className="goal-card-top">
               <span className="goal-icon">{goal.icon}</span>
               <span className={`status-badge ${goal.status}`}>
-                {goal.status === 'completed' ? 'Completed' : goal.status === 'at-risk' ? 'At Risk' : goal.status === 'high-risk' ? 'High Risk' : 'On Track'}
+                {GOAL_STATUS_LABELS[goal.status]}
               </span>
             </div>
             <h5 className="goal-title">{goal.name}</h5>
@@ -337,7 +337,5 @@ const GoalsPage = ({ user }) => {
     </div>
   );
 };
-
-// ═══════════════════════════════════════════════════════
 
 export default GoalsPage

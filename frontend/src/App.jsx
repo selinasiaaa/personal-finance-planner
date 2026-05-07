@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { getStoredUser } from './utils/session'
+import { ROUTES, AUTH_ROUTES, ROUTE_PAGE_MAP } from './constants/routes'
 import Sidebar from './components/Sidebar/Sidebar'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -22,9 +23,8 @@ export default function App() {
   const location = useLocation()
   const resolvedUser = user ?? getStoredUser()
 
-  const isAuthPage = ['/login', '/register', '/forgot-password', '/change-password'].includes(location.pathname)
-  const currentPageMap = { '/': 'goals', '/dashboard': 'dashboard', '/investments': 'investments', '/roi': 'roi', '/profile': 'profile' }
-  const currentPage = currentPageMap[location.pathname] || 'goals'
+  const isAuthPage = AUTH_ROUTES.includes(location.pathname)
+  const currentPage = ROUTE_PAGE_MAP[location.pathname] || 'goals'
 
   useEffect(() => {
     setUser(getStoredUser())
@@ -35,16 +35,16 @@ export default function App() {
       {!isAuthPage && <Sidebar currentPage={currentPage} user={resolvedUser} isAuthPage={isAuthPage} />}
       <div className="app-content">
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/change-password" element={<ChangePasswordPage user={resolvedUser} />} />
-          <Route path="/" element={<ProtectedRoute><GoalsPage user={resolvedUser} /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage user={resolvedUser} /></ProtectedRoute>} />
-          <Route path="/investments" element={<ProtectedRoute><InvestmentsPage user={resolvedUser} /></ProtectedRoute>} />
-          <Route path="/roi" element={<ProtectedRoute><RoiPage user={resolvedUser} /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage user={resolvedUser} setUser={setUser} /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+          <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+          <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+          <Route path={ROUTES.CHANGE_PASSWORD} element={<ChangePasswordPage user={resolvedUser} />} />
+          <Route path={ROUTES.GOALS} element={<ProtectedRoute><GoalsPage user={resolvedUser} /></ProtectedRoute>} />
+          <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><DashboardPage user={resolvedUser} /></ProtectedRoute>} />
+          <Route path={ROUTES.INVESTMENTS} element={<ProtectedRoute><InvestmentsPage user={resolvedUser} /></ProtectedRoute>} />
+          <Route path={ROUTES.ROI} element={<ProtectedRoute><RoiPage user={resolvedUser} /></ProtectedRoute>} />
+          <Route path={ROUTES.PROFILE} element={<ProtectedRoute><ProfilePage user={resolvedUser} setUser={setUser} /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to={ROUTES.GOALS} />} />
         </Routes>
       </div>
     </div>

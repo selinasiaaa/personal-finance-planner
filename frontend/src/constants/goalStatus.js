@@ -19,3 +19,4 @@ export const GOAL_FILTERS = [
   { label: 'High Risk', value: GOAL_STATUS.HIGH_RISK },
   { label: 'Completed', value: GOAL_STATUS.COMPLETED },
 ];
+
