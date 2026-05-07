@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const { getMarketInsights } = require('./controllers/marketController');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const goalRoutes = require('./routes/goalRoutes');
+const roiRoutes = require('./routes/roiRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -16,7 +18,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/goals', require('./routes/goalRoutes'));
+app.use('/api/goals', goalRoutes);
+app.use('/api/roi', roiRoutes);
 
 // 1. Your new "Front Door" route correctly placed AFTER app is defined
 app.get('/', (req, res) => {

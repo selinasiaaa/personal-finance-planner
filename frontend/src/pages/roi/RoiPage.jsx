@@ -2,29 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Chart from 'chart.js/auto'
 import './RoiPage.css'
-
-const ROI_HISTORY_KEY = 'roi-history-mock'
-
-const createHistoryItem = (overrides = {}) => ({
-  _id: `roi-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-  createdAt: new Date().toISOString(),
-  ...overrides,
-})
-
-const getStoredHistory = () => {
-  try {
-    const saved = JSON.parse(localStorage.getItem(ROI_HISTORY_KEY) || 'null')
-    if (Array.isArray(saved)) return saved
-  } catch {
-    // fall through to empty history
-  }
-
-  return []
-}
-
-const saveMockHistory = (items) => {
-  localStorage.setItem(ROI_HISTORY_KEY, JSON.stringify(items))
-}
+import { apiRequest, getStoredUser } from '../../utils/session'
 
 const normalizeWholeNumberInput = (value) => value.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
 const normalizeDecimalInput = (value) => value.replace(/[^\d.]/g, '').replace(/^(0+)(?=\d)/, '')
@@ -56,19 +34,22 @@ const RoiPage = ({ user }) => {
 
   useEffect(() => { if (!user?.email) navigate('/login'); }, [user, navigate]);
 
-  const fetchHistory = () => {
-    setLoadingHistory(true)
-    try {
-      setHistory(getStoredHistory())
-    } catch (err) {
-      console.error('Failed to load history', err)
-      setHistory([])
-    } finally {
-      setLoadingHistory(false)
+  const fetchHistory = async () => {
+      const uid = user?.id || user?._id || getStoredUser()?._id || getStoredUser()?.id || getStoredUser()?.email || ''
+      setLoadingHistory(true)
+      try {
+        const res = await apiRequest(`/api/roi/history/${encodeURIComponent(uid)}`, { method: 'GET' })
+        const serverHistory = Array.isArray(res) ? res : []
+        setHistory(serverHistory)
+      } catch (err) {
+        console.error('Failed to fetch history', err)
+        setHistory([])
+      } finally {
+        setLoadingHistory(false)
+      }
     }
-  }
 
-  // Load saved ROI history from local mock storage
+  // Load saved ROI history
   useEffect(() => {
     fetchHistory()
   }, [])
@@ -165,28 +146,26 @@ const RoiPage = ({ user }) => {
     return { invested: Math.round(invested), fv: Math.round(fv), profit: Math.round(profit), gain: invested > 0 ? ((profit / invested) * 100).toFixed(1) : '0.0' };
   };
 
-  // Save current result to server
-  const saveToHistory = () => {
+  const saveToHistory = async () => {
     if (!results) return;
-    const payload = createHistoryItem({
+    const payload = {
       mode: roiMode,
-      principal: Number(formData.principal) || 0,
-      monthlyContribution: Number(formData.monthly) || 0,
-      annualInterestRate: Number(formData.rate) || 0,
-      durationInYears: Number(formData.duration) || 0,
+      principal: formData.principal,
+      monthlyContribution: formData.monthly,
+      annualInterestRate: formData.rate,
+      durationInYears: formData.duration,
       invested: results.invested,
       futureValue: results.fv,
       profit: results.profit,
       gainPercentage: results.gain,
       timeLineData: chartData || { labels: [], values: [] },
-    })
+    }
 
     setSaving(true)
     try {
-      const saved = createMockHistoryItem(payload)
-      const next = [saved, ...history]
-      setHistory(next)
-      saveMockHistory(next)
+      const res = await apiRequest('/api/roi/history', { method: 'POST', body: JSON.stringify(payload) })
+      const saved = res && res._id ? res : null
+      if (saved) setHistory([saved, ...history])
     } catch (err) {
       console.error('Failed to save history', err)
     } finally {
@@ -205,12 +184,12 @@ const RoiPage = ({ user }) => {
 
   const deleteHistoryItem = async (item) => {
     try {
-      const next = history.filter(i => String(i._id) !== String(item._id))
-      setHistory(next)
-      saveMockHistory(next)
+      if (item._id) await apiRequest(`/api/roi/history/${encodeURIComponent(item._id)}`, { method: 'DELETE' })
     } catch (err) {
-      console.error('Failed to delete item', err)
+      console.error('Failed to delete item on server', err)
     }
+    const next = history.filter(i => String(i._id) !== String(item._id))
+    setHistory(next)
   }
 
   const sA = results ? calcScenario(rateA) : null;
@@ -270,9 +249,9 @@ const RoiPage = ({ user }) => {
     setSaving(true)
     try {
       const ids = Array.from(selectedIds)
+      await apiRequest('/api/roi/history', { method: 'DELETE', body: JSON.stringify({ ids }) })
       const next = history.filter(i => !ids.includes(String(i._id)))
       setHistory(next)
-      saveMockHistory(next)
       setSelectedIds(new Set())
       setSelectionMode(false)
     } catch (err) {
