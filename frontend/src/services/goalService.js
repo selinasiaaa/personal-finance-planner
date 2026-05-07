@@ -7,8 +7,11 @@
 
 const BASE = '/api/goals';
 
+import { getStoredUser } from '../utils/session'
+
 const authHeader = () => {
-  const token = localStorage.getItem('token');
+  const user = getStoredUser();
+  const token = user?.token || localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

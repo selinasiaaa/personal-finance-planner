@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { clearStoredUser, getStoredUser, isValidEmail, setStoredUser, updateStoredUser } from '../../utils/session'
+import { apiRequest, clearStoredUser, isValidEmail, setStoredUser } from '../../utils/session'
 import './ProfilePage.css'
 
 const ProfilePage = ({ user, setUser }) => {
@@ -23,8 +23,9 @@ const ProfilePage = ({ user, setUser }) => {
     if (!isValidEmail(profileData.email)) { setError('Please enter a valid email address.'); return; }
     setLoading(true);
     try {
+      const updatedUser = await apiRequest('/api/users/profile', { method: 'PUT', body: JSON.stringify(profileData) });
       const rememberSession = Boolean(localStorage.getItem('user'));
-      const newUser = updateStoredUser(profileData) || { ...user, ...profileData };
+      const newUser = { ...user, ...updatedUser };
       setStoredUser(newUser, rememberSession);
       setUser(newUser);
       setSuccess('Profile updated successfully!');
@@ -38,6 +39,7 @@ const ProfilePage = ({ user, setUser }) => {
   const handleDeleteAccount = async () => {
     if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
     try {
+      await apiRequest('/api/users/profile', { method: 'DELETE' });
       clearStoredUser(); navigate('/register');
     } catch (err) { alert(err.message || 'Delete failed.'); }
   };

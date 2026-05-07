@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getStoredUser, isValidEmail, loginUser } from '../../utils/session'
+import { apiRequest, getStoredUser, isValidEmail, setStoredUser } from '../../utils/session'
 import './LoginPage.css'
 
-// LOGIN PAGE
-// ═══════════════════════════════════════════════════════
 const LoginPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '', rememberMe: true });
@@ -20,23 +18,8 @@ const LoginPage = () => {
     if (!formData.password)            { setError('Please enter your password.');          return; }
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Login failed');
-
-      // Store JWT token for API calls
-      if (formData.rememberMe) {
-        localStorage.setItem('token', data.token);
-      } else {
-        sessionStorage.setItem('token', data.token);
-      }
-
-      // Store user info
-      loginUser({ name: data.name, email: data.email, rememberMe: formData.rememberMe });
+      const user = await apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: formData.email, password: formData.password }) });
+      setStoredUser(user, formData.rememberMe);
       navigate('/');
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
@@ -76,7 +59,5 @@ const LoginPage = () => {
     </div>
   );
 };
-
-// ═══════════════════════════════════════════════════════
 
 export default LoginPage

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { isStrongPassword } from '../../utils/session'
+import { apiRequest, isStrongPassword } from '../../utils/session'
 import './ChangePasswordPage.css'
 
 const ChangePasswordPage = ({ user }) => {
@@ -20,7 +20,15 @@ const ChangePasswordPage = ({ user }) => {
     if (formData.newPassword !== formData.confirmNewPassword) { setError('New password and confirm password do not match.'); return; }
     setLoading(true);
     try {
-      setSuccess('Password changed successfully.');
+      const data = await apiRequest('/api/auth/change-password', { 
+        method: 'POST', 
+        body: JSON.stringify({ 
+          email: user.email, 
+          currentPassword: formData.currentPassword, 
+          newPassword: formData.newPassword 
+        }) 
+      });
+      setSuccess(data?.message || 'Password changed successfully.');
       setTimeout(() => navigate('/profile'), 1500);
     } catch (err) {
       setError(err.message || 'Failed to change password.');

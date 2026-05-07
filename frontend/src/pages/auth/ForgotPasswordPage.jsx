@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { isValidEmail } from '../../utils/session'
+import { useNavigate } from 'react-router-dom'
+import { apiRequest, isValidEmail } from '../../utils/session'
 import './AuthShared.css'
 
 const ForgotPasswordPage = () => {
@@ -14,7 +15,8 @@ const ForgotPasswordPage = () => {
     if (!isValidEmail(email)) { setError('Please enter a valid email address.'); return; }
     setLoading(true);
     try {
-      setSuccess('Reset link sent to your email.');
+      const data = await apiRequest('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+      setSuccess(data?.message || 'Reset link sent to your email.');
       setEmail('');
     } catch (err) {
       setError(err.message || 'Failed to send reset link.');
