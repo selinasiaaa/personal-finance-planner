@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { INVESTMENT_RISK_PROFILES, RISK_PROFILE_KEYS } from '../../data/investmentRiskProfiles'
 import './InvestmentsPage.css'
+
+const PORTFOLIO_ASSIGNMENTS_KEY = 'pfp_goal_portfolios'
+const savePortfolioAssignment = (goalId, portfolio) => {
+  const current = JSON.parse(localStorage.getItem(PORTFOLIO_ASSIGNMENTS_KEY)) || {}
+  localStorage.setItem(PORTFOLIO_ASSIGNMENTS_KEY, JSON.stringify({ ...current, [goalId]: portfolio }))
+}
 
 // INVESTMENTS PAGE
 // ═══════════════════════════════════════════════════════
@@ -15,14 +20,44 @@ const InvestmentsPage = ({ user }) => {
   useEffect(() => { if (!user?.email) navigate('/login'); }, [user, navigate]);
 
   const GOALS_LIST = [
-    { id: 'goal-1', name: 'Dream Home Down Payment', saved: 88400, target: 130000, status: 'on-track' },
-    { id: 'goal-2', name: 'Personal Savings Fund', saved: 44000, target: 100000, status: 'on-track' },
-    { id: 'goal-3', name: 'Emergency Fund', saved: 16500, target: 30000, status: 'at-risk' },
-    { id: 'goal-4', name: 'Travel Fund', saved: 16400, target: 20000, status: 'on-track' },
-    { id: 'goal-5', name: 'Early Retirement Fund', saved: 210000, target: 1000000, status: 'high-risk' },
+    { id: 1, name: 'Dream Home Down Payment', saved: 88400, target: 130000, status: 'on-track' },
+    { id: 2, name: 'Personal Savings Fund', saved: 44000, target: 100000, status: 'on-track' },
+    { id: 3, name: 'Emergency Fund', saved: 16500, target: 30000, status: 'at-risk' },
+    { id: 4, name: 'Travel Fund', saved: 16400, target: 20000, status: 'on-track' },
+    { id: 5, name: 'Early Retirement Fund', saved: 210000, target: 1000000, status: 'high-risk' },
   ];
 
-  const riskData = INVESTMENT_RISK_PROFILES[selectedRisk];
+  const RISK_DATA = {
+    conservative: {
+      title: 'Conservative Investment Plan', tag: 'LOW RISK', tagColor: '#1b5e20', returnVal: '3–5%',
+      gradient: 'linear-gradient(135deg, #2e7d32, #4caf50)', borderColor: '#2e7d32',
+      quoteColor: '#f0fdf4', quoteBorder: '#4caf50',
+      allocation: [{ label: 'Fixed Deposit / ASB — 50%', pct: 50, color: '#1b5e20' }, { label: 'Sukuk / Bonds — 30%', pct: 30, color: '#4caf50' }, { label: 'Money Market — 20%', pct: 20, color: '#a5d6a7' }],
+      instruments: ['ASB (Amanah Saham)', 'Sukuk', 'Fixed Deposit', 'Money Market Fund'],
+      suitableGoals: [{ icon: '🚨', text: 'Emergency Fund (3–6 months expenses)' }, { icon: '✈️', text: 'Travel Fund (1–2 years)' }, { icon: '🎓', text: 'Education Savings (short-term)' }],
+      quote: '"Capital safety is your priority. Keep losses minimal and grow your savings steadily. Ideal if you need the money within 1–3 years."',
+    },
+    balanced: {
+      title: 'Balanced Investment Plan', tag: 'MEDIUM RISK', tagColor: '#1565c0', returnVal: '6–10%',
+      gradient: 'linear-gradient(135deg, #1565c0, #42a5f5)', borderColor: '#1565c0',
+      quoteColor: '#eff6ff', quoteBorder: '#42a5f5',
+      allocation: [{ label: 'ETFs / Unit Trusts — 40%', pct: 40, color: '#1565c0' }, { label: 'Blue-chip Stocks — 35%', pct: 35, color: '#42a5f5' }, { label: 'Bonds / Sukuk — 25%', pct: 25, color: '#bbdefb' }],
+      instruments: ['Bursa Malaysia ETFs', 'Sukuk', 'Blue-chip Stocks', 'Unit Trusts'],
+      suitableGoals: [{ icon: '🏠', text: 'Home Down Payment (3–7 years)' }, { icon: '🏦', text: 'Retirement Savings (long-term)' }, { icon: '🎓', text: 'Education Fund (5+ years)' }],
+      quote: '"A blend of growth and stability. You accept some volatility in exchange for better long-term returns."',
+    },
+    aggressive: {
+      title: 'Aggressive Investment Plan', tag: 'HIGH RISK', tagColor: '#b71c1c', returnVal: '10–20%+',
+      gradient: 'linear-gradient(135deg, #b71c1c, #ef5350)', borderColor: '#b71c1c',
+      quoteColor: '#fff5f5', quoteBorder: '#ef5350',
+      allocation: [{ label: 'Growth Stocks — 60%', pct: 60, color: '#c62828' }, { label: 'REITs / Sector Funds — 25%', pct: 25, color: '#ef5350' }, { label: 'Crypto / Alternative — 15%', pct: 15, color: '#ffcdd2' }],
+      instruments: ['Bursa Growth Stocks', 'Sector ETFs', 'REITs (M-REITs)', 'Crypto Assets'],
+      suitableGoals: [{ icon: '⛱️', text: 'Early Retirement Fund (10+ years)' }, { icon: '🏦', text: 'Wealth Building (long horizon)' }, { icon: '📈', text: 'High-growth Portfolio' }],
+      quote: '"You\'re in it for the long game. High volatility is acceptable — your focus is maximum wealth accumulation over time."',
+    },
+  };
+
+  const riskData = RISK_DATA[selectedRisk];
 
   return (
     <div className="main-content">
@@ -33,7 +68,7 @@ const InvestmentsPage = ({ user }) => {
         <h2 className="inv-main-title">Choose Your Risk Profile</h2>
         <p className="inv-main-sub">Choose a risk level based on your goals and time horizon.</p>
         <div className="risk-tabs mb-4">
-          {RISK_PROFILE_KEYS.map(risk => (
+          {['conservative', 'balanced', 'aggressive'].map(risk => (
             <button key={risk} className={`risk-tab ${selectedRisk === risk ? 'active ' + risk : ''}`} onClick={() => setSelectedRisk(risk)}>
               {risk.charAt(0).toUpperCase() + risk.slice(1)}
             </button>
@@ -132,7 +167,20 @@ const InvestmentsPage = ({ user }) => {
             </div>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
               <button className="btn-modal-cancel" onClick={() => { setShowConfirmModal(false); setShowGoalModal(true); }}>Back</button>
-              <button className="btn-modal-save" onClick={() => { alert('Portfolio applied successfully!'); setShowConfirmModal(false); setSelectedGoal(null); }}>Confirm</button>
+              <button className="btn-modal-save" onClick={() => {
+                if (selectedGoal) {
+                  savePortfolioAssignment(selectedGoal.id, {
+                    name: riskData.title,
+                    riskLevel: selectedRisk.charAt(0).toUpperCase() + selectedRisk.slice(1),
+                    allocation: riskData.allocation,
+                    instruments: riskData.instruments,
+                    expectedReturn: riskData.returnVal,
+                  })
+                }
+                alert('Portfolio applied successfully!');
+                setShowConfirmModal(false);
+                setSelectedGoal(null);
+              }}>Confirm</button>
             </div>
           </div>
         </div>
