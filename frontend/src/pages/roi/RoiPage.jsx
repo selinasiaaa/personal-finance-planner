@@ -26,15 +26,18 @@ const saveMockHistory = (items) => {
   localStorage.setItem(ROI_HISTORY_KEY, JSON.stringify(items))
 }
 
+const normalizeWholeNumberInput = (value) => value.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
+const normalizeDecimalInput = (value) => value.replace(/[^\d.]/g, '').replace(/^(0+)(?=\d)/, '')
+
 const RoiPage = ({ user }) => {
   const navigate = useNavigate();
 
   const [roiMode, setRoiMode] = useState('compound');
-  const [formData, setFormData] = useState({ principal: 10000, monthly: 200, rate: 7.0, duration: 10 });
-  const [activeRate, setActiveRate] = useState(7);
-  const [activeDuration, setActiveDuration] = useState(10);
-  const [rateA, setRateA] = useState(5.0);
-  const [rateB, setRateB] = useState(8.0);
+  const [formData, setFormData] = useState({ principal: '', monthly: '', rate: '', duration: '' });
+  const [activeRate, setActiveRate] = useState(null);
+  const [activeDuration, setActiveDuration] = useState(null);
+  const [rateA, setRateA] = useState('');
+  const [rateB, setRateB] = useState('');
   const [results, setResults] = useState(null);
   const [chartData, setChartData] = useState(null);
   const chartRef      = useRef(null);
@@ -46,6 +49,10 @@ const RoiPage = ({ user }) => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [validationMessage, setValidationMessage] = useState('');
+  const principalInputRef = useRef(null);
+  const rateInputRef = useRef(null);
+  const durationInputRef = useRef(null);
 
   useEffect(() => { if (!user?.email) navigate('/login'); }, [user, navigate]);
 
@@ -101,8 +108,32 @@ const RoiPage = ({ user }) => {
   };
   const calcSimple = (P, r, t) => r === 0 ? P : P * (1 + r * t);
 
+  const focusMissingField = (field) => {
+    const fieldRefs = {
+      principal: principalInputRef,
+      rate: rateInputRef,
+      duration: durationInputRef,
+    }
+
+    const targetRef = fieldRefs[field]
+    if (!targetRef?.current) return
+
+    targetRef.current.focus()
+    targetRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
   const calculateResults = () => {
-    const P = formData.principal, PMT = formData.monthly, r = formData.rate / 100, t = formData.duration;
+    if (formData.principal === '' || formData.rate === '' || formData.duration === '') {
+      const missingField = formData.principal === '' ? 'principal' : formData.rate === '' ? 'rate' : 'duration'
+      setValidationMessage('Please fill in Initial Investment, Annual Interest Rate, and Duration before calculating.')
+      focusMissingField(missingField)
+      return
+    }
+
+    const P = Number(formData.principal) || 0;
+    const PMT = Number(formData.monthly) || 0;
+    const r = (Number(formData.rate) || 0) / 100;
+    const t = Number(formData.duration) || 0;
     const invested = roiMode === 'compound' ? P + PMT * t * 12 : P;
     const fv       = roiMode === 'compound' ? calcCompound(P, PMT, r, t) : calcSimple(P, r, t);
     const profit   = fv - invested;
@@ -118,12 +149,16 @@ const RoiPage = ({ user }) => {
     // Set results first (mounts the canvas), then chart data (triggers useEffect)
     setResults({ invested: Math.round(invested), fv: Math.round(fv), profit: Math.round(profit), gain });
     setChartData({ labels, values });
+    setValidationMessage('');
     // mark that user just calculated so we can auto-save once results are applied
     setJustCalculated(true);
   };
 
   const calcScenario = (rate) => {
-    const P = formData.principal, PMT = formData.monthly, r = rate / 100, t = formData.duration;
+    const P = Number(formData.principal) || 0;
+    const PMT = Number(formData.monthly) || 0;
+    const r = (Number(rate) || 0) / 100;
+    const t = Number(formData.duration) || 0;
     const invested = roiMode === 'compound' ? P + PMT * t * 12 : P;
     const fv       = roiMode === 'compound' ? calcCompound(P, PMT, r, t) : calcSimple(P, r, t);
     const profit   = fv - invested;
@@ -135,10 +170,10 @@ const RoiPage = ({ user }) => {
     if (!results) return;
     const payload = createHistoryItem({
       mode: roiMode,
-      principal: formData.principal,
-      monthlyContribution: formData.monthly,
-      annualInterestRate: formData.rate,
-      durationInYears: formData.duration,
+      principal: Number(formData.principal) || 0,
+      monthlyContribution: Number(formData.monthly) || 0,
+      annualInterestRate: Number(formData.rate) || 0,
+      durationInYears: Number(formData.duration) || 0,
       invested: results.invested,
       futureValue: results.fv,
       profit: results.profit,
@@ -182,14 +217,17 @@ const RoiPage = ({ user }) => {
   const sB = results ? calcScenario(rateB) : null;
   const fmt = n => 'RM ' + n.toLocaleString();
   const modeBadgeStyle = { background: roiMode === 'compound' ? '#dbeafe' : '#ede9fe', color: roiMode === 'compound' ? '#3b6eff' : '#8b5cf6' };
+  const canCalculate = formData.principal !== '' && formData.rate !== '' && formData.duration !== '';
+  const scenarioARateLabel = rateA === '' ? '—' : rateA;
+  const scenarioBRateLabel = rateB === '' ? '—' : rateB;
 
   const restoreHistoryItem = (item) => {
     setRoiMode(item.mode || 'compound')
     setFormData({
-      principal: item.principal || 0,
-      monthly: item.monthlyContribution || item.monthly || 0,
-      rate: item.annualInterestRate || item.annualRate || item.rate || 0,
-      duration: item.durationInYears || item.years || item.duration || 1,
+      principal: String(item.principal ?? ''),
+      monthly: String(item.monthlyContribution ?? item.monthly ?? ''),
+      rate: String(item.annualInterestRate ?? item.annualRate ?? item.rate ?? ''),
+      duration: String(item.durationInYears ?? item.years ?? item.duration ?? ''),
     })
     setShowHistory(false)
     // re-calc after state settles
@@ -283,56 +321,61 @@ const RoiPage = ({ user }) => {
             <span className="roi-mode-badge" style={modeBadgeStyle}>{roiMode === 'compound' ? 'Compound' : 'Simple'}</span>
           </div>
           <div className="roi-field">
-            <div className="roi-field-header"><label>Initial Investment</label><span className="roi-field-tag">One-time</span></div>
+            <div className="roi-field-header"><label>Initial Investment <span style={{ color: '#ef4444' }}>*</span></label><span className="roi-field-tag">Required</span></div>
             <div className="roi-input-group">
               <span className="roi-prefix">RM</span><span className="roi-sep">|</span>
-              <input type="number" className="roi-input" value={formData.principal} onChange={e => setFormData({ ...formData, principal: parseFloat(e.target.value) || 0 })} min="0" />
+              <input ref={principalInputRef} type="text" inputMode="numeric" className="roi-input" value={formData.principal} onChange={e => setFormData({ ...formData, principal: normalizeWholeNumberInput(e.target.value) })} placeholder="Enter initial investment" />
             </div>
           </div>
           <div className="roi-field" style={{ opacity: roiMode === 'compound' ? 1 : 0.45 }}>
             <div className="roi-field-header">
               <label>Monthly Contribution</label>
-              <span className="roi-field-tag" style={{ color: roiMode === 'compound' ? '#5c6170' : '#a78bfa' }}>{roiMode === 'compound' ? 'Per month' : 'NOT USED'}</span>
+              <span className="roi-field-tag" style={{ color: roiMode === 'compound' ? '#5c6170' : '#a78bfa' }}>{roiMode === 'compound' ? 'Optional' : 'Not used'}</span>
             </div>
             <div className="roi-input-group">
               <span className="roi-prefix">RM</span><span className="roi-sep">|</span>
-              <input type="number" className="roi-input" value={formData.monthly} onChange={e => setFormData({ ...formData, monthly: parseFloat(e.target.value) || 0 })} min="0" disabled={roiMode === 'simple'} />
+              <input type="text" inputMode="numeric" className="roi-input" value={formData.monthly} onChange={e => setFormData({ ...formData, monthly: normalizeWholeNumberInput(e.target.value) })} placeholder="Enter amount (optional)" disabled={roiMode === 'simple'} />
             </div>
           </div>
           <div className="roi-field">
-            <div className="roi-field-header"><label>Annual Interest Rate</label></div>
+            <div className="roi-field-header"><label>Annual Interest Rate <span style={{ color: '#ef4444' }}>*</span></label><span className="roi-field-tag">Required</span></div>
             <div className="roi-input-group">
-              <input type="number" className="roi-input" value={formData.rate} onChange={e => { setFormData({ ...formData, rate: parseFloat(e.target.value) || 0 }); setActiveRate(null); }} step="0.5" min="0" max="100" />
+              <input ref={rateInputRef} type="text" inputMode="decimal" className="roi-input" value={formData.rate} onChange={e => { setFormData({ ...formData, rate: normalizeDecimalInput(e.target.value) }); setActiveRate(null); }} placeholder="Enter rate" />
               <span className="roi-sep">|</span><span className="roi-suffix">%</span>
             </div>
             <div className="roi-quick-btns mt-2">
               {[3, 5, 7, 9, 12].map(v => (
                 <button key={v} className={`quick-btn ${activeRate === v ? (roiMode === 'compound' ? 'active' : 'active-simple') : ''}`}
-                  onClick={() => { setFormData({ ...formData, rate: v }); setActiveRate(v); }}>{v}%</button>
+                  onClick={() => { setFormData({ ...formData, rate: String(v) }); setActiveRate(v); }}>{v}%</button>
               ))}
             </div>
           </div>
           <div className="roi-hr"></div>
           <div className="roi-field">
-            <div className="roi-field-header"><label>Duration</label></div>
+            <div className="roi-field-header"><label>Duration <span style={{ color: '#ef4444' }}>*</span></label><span className="roi-field-tag">Required</span></div>
             <div className="roi-input-group">
-              <button className="roi-stepper" onClick={() => { const v = Math.max(1, formData.duration - 1); setFormData({ ...formData, duration: v }); setActiveDuration(null); }}>−</button>
+              <button className="roi-stepper" onClick={() => { const currentDuration = Number(formData.duration) || 0; const v = Math.max(1, currentDuration - 1); setFormData({ ...formData, duration: String(v) }); setActiveDuration(null); }}>−</button>
               <span className="roi-sep">|</span>
-              <input type="number" className="roi-input" value={formData.duration} onChange={e => { setFormData({ ...formData, duration: parseInt(e.target.value) || 1 }); setActiveDuration(null); }} min="1" max="50" />
+              <input ref={durationInputRef} type="text" inputMode="numeric" className="roi-input" value={formData.duration} onChange={e => { setFormData({ ...formData, duration: normalizeWholeNumberInput(e.target.value) }); setActiveDuration(null); }} placeholder="Enter duration" />
               <span className="roi-dur-label">years</span>
               <span className="roi-sep">|</span>
-              <button className="roi-stepper" onClick={() => { const v = Math.min(50, formData.duration + 1); setFormData({ ...formData, duration: v }); setActiveDuration(null); }}>+</button>
+              <button className="roi-stepper" onClick={() => { const currentDuration = Number(formData.duration) || 0; const v = Math.min(50, currentDuration + 1); setFormData({ ...formData, duration: String(v) }); setActiveDuration(null); }}>+</button>
             </div>
             <div className="roi-quick-btns mt-2">
               {[3, 5, 10, 20].map(v => (
                 <button key={v} className={`quick-btn ${activeDuration === v ? (roiMode === 'compound' ? 'active' : 'active-simple') : ''}`}
-                  onClick={() => { setFormData({ ...formData, duration: v }); setActiveDuration(v); }}>{v}yr</button>
+                  onClick={() => { setFormData({ ...formData, duration: String(v) }); setActiveDuration(v); }}>{v}yr</button>
               ))}
             </div>
           </div>
           <button className={`btn-calculate mt-4 ${roiMode === 'simple' ? 'simple-calc' : ''}`} onClick={calculateResults}>
             Calculate ({roiMode === 'compound' ? 'Compound' : 'Simple'})
           </button>
+          {validationMessage && (
+            <div style={{ marginTop: '10px', color: '#b45309', fontSize: '0.92rem' }}>
+              {validationMessage}
+            </div>
+          )}
         </div>
 
         {/* Right: Results */}
@@ -385,12 +428,12 @@ const RoiPage = ({ user }) => {
                     <div className="scenario-header">
                       <span className="scenario-rate-label">RATE A</span>
                       <div className="roi-input-group mini">
-                        <input type="number" className="roi-input" style={{ textAlign: 'right' }} value={rateA} onChange={e => setRateA(parseFloat(e.target.value) || 0)} step="0.5" />
+                        <input type="text" inputMode="decimal" className="roi-input" style={{ textAlign: 'right' }} value={rateA} onChange={e => setRateA(normalizeDecimalInput(e.target.value))} placeholder="Enter rate A" />
                         <span className="roi-sep">|</span><span className="roi-suffix">%</span>
                       </div>
                     </div>
                     <div className="scenario-card">
-                      <div className="scenario-card-top"><span>Scenario A</span><span className="scenario-badge neutral">{rateA}%</span></div>
+                      <div className="scenario-card-top"><span>Scenario A</span><span className="scenario-badge neutral">{scenarioARateLabel}%</span></div>
                       <div className="scenario-row"><span>Total Invested</span><strong>{fmt(sA.invested)}</strong></div>
                       <div className="scenario-row"><span>Total Return</span><strong>{fmt(sA.fv)}</strong></div>
                       <div className="scenario-row"><span>Profit</span><strong style={{ color: '#22c55e' }}>+{fmt(sA.profit)}</strong></div>
@@ -402,12 +445,12 @@ const RoiPage = ({ user }) => {
                     <div className="scenario-header">
                       <span className="scenario-rate-label">RATE B</span>
                       <div className="roi-input-group mini">
-                        <input type="number" className="roi-input" style={{ textAlign: 'right' }} value={rateB} onChange={e => setRateB(parseFloat(e.target.value) || 0)} step="0.5" />
+                        <input type="text" inputMode="decimal" className="roi-input" style={{ textAlign: 'right' }} value={rateB} onChange={e => setRateB(normalizeDecimalInput(e.target.value))} placeholder="Enter rate B" />
                         <span className="roi-sep">|</span><span className="roi-suffix">%</span>
                       </div>
                     </div>
                     <div className="scenario-card best-scenario">
-                      <div className="scenario-card-top"><span>Scenario B</span><span className="scenario-badge best">{rateB}%</span></div>
+                      <div className="scenario-card-top"><span>Scenario B</span><span className="scenario-badge best">{scenarioBRateLabel}%</span></div>
                       <div className="scenario-row"><span>Total Invested</span><strong>{fmt(sB.invested)}</strong></div>
                       <div className="scenario-row"><span>Total Return</span><strong style={{ color: '#22c55e' }}>{fmt(sB.fv)}</strong></div>
                       <div className="scenario-row">
@@ -422,6 +465,9 @@ const RoiPage = ({ user }) => {
                       </div>
                     </div>
                   </div>
+                </div>
+                <div style={{ marginTop: '10px', color: '#6b7280', fontSize: '0.9rem' }}>
+                  Enter any two annual rates you want to compare, such as 4.5% and 9.0%.
                 </div>
               </div>
             </>
