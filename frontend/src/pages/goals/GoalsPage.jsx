@@ -4,8 +4,6 @@ import { MOCK_GOALS } from '../../data/mockGoals'
 import { GOAL_FILTERS, GOAL_STATUS_LABELS, GOAL_STATUS } from '../../constants/goalStatus'
 import './GoalsPage.css'
 
-// GOALS PAGE
-// ═══════════════════════════════════════════════════════
 const GoalsPage = ({ user }) => {
   const navigate = useNavigate();
   const [goals, setGoals] = useState(MOCK_GOALS);
@@ -264,7 +262,5 @@ const GoalsPage = ({ user }) => {
     </div>
   );
 };
-
-// ═══════════════════════════════════════════════════════
 
 export default GoalsPage

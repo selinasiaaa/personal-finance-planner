@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Chart from 'chart.js/auto'
 import './RoiPage.css'
 
-// ROI CALCULATOR PAGE
-// ═══════════════════════════════════════════════════════
 const RoiPage = ({ user }) => {
   const navigate = useNavigate();
   const [roiMode, setRoiMode] = useState('compound');
@@ -21,7 +19,6 @@ const RoiPage = ({ user }) => {
 
   useEffect(() => { if (!user?.email) navigate('/login'); }, [user, navigate]);
 
-  // ── FIX: draw chart only after results panel is in the DOM ──
   useEffect(() => {
     if (!chartData || !chartRef.current) return;
     if (chartInstance.current) chartInstance.current.destroy();
@@ -266,7 +263,5 @@ const RoiPage = ({ user }) => {
     </div>
   );
 };
-
-// ═══════════════════════════════════════════════════════
 
 export default RoiPage

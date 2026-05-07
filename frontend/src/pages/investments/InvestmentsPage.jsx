@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { INVESTMENT_RISK_PROFILES, RISK_PROFILE_KEYS } from '../../data/investmentRiskProfiles'
 import './InvestmentsPage.css'
 
-// INVESTMENTS PAGE
-// ═══════════════════════════════════════════════════════
 const InvestmentsPage = ({ user }) => {
   const navigate = useNavigate();
   const [selectedRisk, setSelectedRisk] = useState('conservative');
@@ -141,6 +139,5 @@ const InvestmentsPage = ({ user }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════
 
 export default InvestmentsPage
