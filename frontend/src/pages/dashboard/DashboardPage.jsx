@@ -327,7 +327,16 @@ const DashboardPage = ({ user }) => {
               rel="noopener noreferrer"
               style={{ display: 'flex', textDecoration: 'none', color: 'inherit' }}
             >
-              <div className={`news-thumb news-thumb--${(i % 3) + 1}`}></div>
+              <div className={`news-thumb news-thumb--${(i % 3) + 1}`}>
+                {n.photo ? (
+                  <img
+                    src={n.photo}
+                    alt={n.title || 'news'}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : null}
+              </div>
               <div className="news-content">
                 <h3 className="news-title">{n.title ?? 'Market update'}</h3>
                 <div className="news-meta">

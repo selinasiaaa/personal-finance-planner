@@ -144,7 +144,8 @@ const fetchMarketInsights = async () => {
               title: article.title,
               source: article.source.name,
               timeLabel: `${hoursAgo} hours ago`,
-              link: article.url
+              link: article.url,
+              photo: article.urlToImage || null,
             };
           });
         } else {
@@ -153,7 +154,7 @@ const fetchMarketInsights = async () => {
           const globalRes = await fetch(`https://newsapi.org/v2/top-headlines?category=business&apiKey=${newsApiKey}`);
           const globalData = await globalRes.json();
 
-          if (globalData.articles && globalData.articles.length > 0) {
+            if (globalData.articles && globalData.articles.length > 0) {
             formattedNews = globalData.articles.slice(0, 3).map(article => {
               const publishedTime = new Date(article.publishedAt).getTime();
               const hoursAgo = Math.max(1, Math.floor((Date.now() - publishedTime) / (1000 * 3600)));
@@ -162,7 +163,8 @@ const fetchMarketInsights = async () => {
                 title: article.title,
                 source: article.source.name,
                 timeLabel: `${hoursAgo} hours ago`,
-                link: article.url
+                link: article.url,
+                photo: article.urlToImage || null,
               };
             });
           }
