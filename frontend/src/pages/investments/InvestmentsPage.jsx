@@ -174,7 +174,7 @@ const InvestmentsPage = ({ user }) => {
                       <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, border: `2px solid ${isSelected ? '#3b6eff' : '#d1d5db'}`, background: isSelected ? 'radial-gradient(circle at center, #3b6eff 45%, #fff 45%)' : 'transparent' }}></div>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontWeight: 700, fontSize: '.95rem', margin: '0 0 3px' }}>{goal.name}</p>
-                        <p style={{ fontSize: '.82rem', color: '#5c6170', margin: 0 }}>RM {(goal.saved || 0).toLocaleString()} / RM {(goal.target || 0).toLocaleString()}</p>
+                        <p style={{ fontSize: '.82rem', color: '#5c6170', margin: 0 }}>RM {(goal.savings || 0).toLocaleString()} / RM {(goal.target || 0).toLocaleString()}</p>
                       </div>
                       <span style={{ ...statusStyle, fontSize: '.72rem', fontWeight: 700, borderRadius: '99px', padding: '4px 12px' }}>{statusLabel}</span>
                     </div>
