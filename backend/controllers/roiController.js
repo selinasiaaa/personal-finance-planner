@@ -32,7 +32,7 @@ const saveRoi = async(req, res) => {
             gainPercentage,
             timeLineData
         });
-        res.status(201).json({message: 'ROI data saved successfully', roi});
+        res.status(201).json(roi);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

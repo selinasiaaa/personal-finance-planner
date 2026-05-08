@@ -35,7 +35,13 @@ const RoiPage = ({ user }) => {
   useEffect(() => { if (!user?.email) navigate('/login'); }, [user, navigate]);
 
   const fetchHistory = async () => {
-      const uid = user?.id || user?._id || getStoredUser()?._id || getStoredUser()?.id || getStoredUser()?.email || ''
+      const storedUser = getStoredUser()
+      const uid = user?._id || user?.id || storedUser?._id || storedUser?.id || user?.email || storedUser?.email || ''
+      if (!uid) {
+        console.warn('No user ID found')
+        setHistory([])
+        return
+      }
       setLoadingHistory(true)
       try {
         const res = await apiRequest(`/api/roi/history/${encodeURIComponent(uid)}`, { method: 'GET' })
@@ -54,7 +60,6 @@ const RoiPage = ({ user }) => {
     fetchHistory()
   }, [])
 
-  // ── FIX: draw chart only after results panel is in the DOM ──
   useEffect(() => {
     if (!chartData || !chartRef.current) return;
     if (chartInstance.current) chartInstance.current.destroy();
