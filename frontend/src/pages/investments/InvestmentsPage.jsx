@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { apiRequest } from '../../utils/session'
 import './InvestmentsPage.css'
 
 const PORTFOLIO_ASSIGNMENTS_KEY = 'pfp_goal_portfolios'
@@ -8,24 +9,44 @@ const savePortfolioAssignment = (goalId, portfolio) => {
   localStorage.setItem(PORTFOLIO_ASSIGNMENTS_KEY, JSON.stringify({ ...current, [goalId]: portfolio }))
 }
 
-// INVESTMENTS PAGE
-// ═══════════════════════════════════════════════════════
 const InvestmentsPage = ({ user }) => {
   const navigate = useNavigate();
   const [selectedRisk, setSelectedRisk] = useState('conservative');
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
+  const [goals, setGoals] = useState([]);
+  const [loadingGoals, setLoadingGoals] = useState(false);
+  const [goalsError, setGoalsError] = useState('');
+  const [savingPortfolio, setSavingPortfolio] = useState(false);
+  const [portfolioError, setPortfolioError] = useState('');
 
-  useEffect(() => { if (!user?.email) navigate('/login'); }, [user, navigate]);
+  useEffect(() => { 
+    if (!user?.email) navigate('/login'); 
+  }, [user, navigate]);
 
-  const GOALS_LIST = [
-    { id: 1, name: 'Dream Home Down Payment', saved: 88400, target: 130000, status: 'on-track' },
-    { id: 2, name: 'Personal Savings Fund', saved: 44000, target: 100000, status: 'on-track' },
-    { id: 3, name: 'Emergency Fund', saved: 16500, target: 30000, status: 'at-risk' },
-    { id: 4, name: 'Travel Fund', saved: 16400, target: 20000, status: 'on-track' },
-    { id: 5, name: 'Early Retirement Fund', saved: 210000, target: 1000000, status: 'high-risk' },
-  ];
+  // Fetch goals from backend API
+  useEffect(() => {
+    const fetchGoals = async () => {
+      setLoadingGoals(true);
+      setGoalsError('');
+      try {
+        const data = await apiRequest('/api/goals');
+        setGoals(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setGoalsError(err.message || 'Failed to load goals. Using offline mode.');
+        console.error('Failed to fetch goals:', err);
+        // Fallback: use empty list or cached data
+        setGoals([]);
+      } finally {
+        setLoadingGoals(false);
+      }
+    };
+    
+    if (user?.email) {
+      fetchGoals();
+    }
+  }, [user]);
 
   const RISK_DATA = {
     conservative: {
@@ -128,27 +149,43 @@ const InvestmentsPage = ({ user }) => {
           <div style={{ background: 'white', borderRadius: '22px', padding: '32px', maxWidth: '640px', width: '90%', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,.15)' }}>
             <h4 className="modal-main-title">Select Goal</h4>
             <p className="modal-main-sub">Choose the financial goal to apply this portfolio to.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '20px 0' }}>
-              {GOALS_LIST.map(goal => {
-                const isSelected = selectedGoal?.id === goal.id;
-                const statusStyle = goal.status === 'on-track' ? { background: '#dcfce7', color: '#15803d' } : goal.status === 'at-risk' ? { background: '#ffedd5', color: '#c2410c' } : { background: '#fee2e2', color: '#b91c1c' };
-                const statusLabel = goal.status === 'on-track' ? 'On Track' : goal.status === 'at-risk' ? 'At Risk' : 'High Risk';
-                return (
-                  <div key={goal.id} onClick={() => setSelectedGoal(goal)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '14px', border: `1.5px solid ${isSelected ? '#3b6eff' : '#e2e6f0'}`, borderRadius: '14px', padding: '16px 18px', cursor: 'pointer', background: isSelected ? '#f0f4ff' : '#fff' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, border: `2px solid ${isSelected ? '#3b6eff' : '#d1d5db'}`, background: isSelected ? 'radial-gradient(circle at center, #3b6eff 45%, #fff 45%)' : 'transparent' }}></div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontWeight: 700, fontSize: '.95rem', margin: '0 0 3px' }}>{goal.name}</p>
-                      <p style={{ fontSize: '.82rem', color: '#5c6170', margin: 0 }}>RM {goal.saved.toLocaleString()} / RM {goal.target.toLocaleString()}</p>
+            
+            {loadingGoals ? (
+              <div style={{ textAlign: 'center', padding: '32px' }}>
+                <p style={{ color: '#666' }}>Loading your goals...</p>
+              </div>
+            ) : goalsError ? (
+              <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '12px', margin: '12px 0', color: '#b91c1c', fontSize: '.9rem' }}>
+                ⚠️ {goalsError}
+              </div>
+            ) : goals.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
+                <p>No goals found. Create a goal first on the Financial Goals page.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '20px 0' }}>
+                {goals.map(goal => {
+                  const isSelected = selectedGoal?._id === goal._id;
+                  const statusStyle = goal.status === 'on-track' ? { background: '#dcfce7', color: '#15803d' } : goal.status === 'at-risk' ? { background: '#ffedd5', color: '#c2410c' } : { background: '#fee2e2', color: '#b91c1c' };
+                  const statusLabel = goal.status === 'on-track' ? 'On Track' : goal.status === 'at-risk' ? 'At Risk' : 'High Risk';
+                  return (
+                    <div key={goal._id} onClick={() => setSelectedGoal(goal)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '14px', border: `1.5px solid ${isSelected ? '#3b6eff' : '#e2e6f0'}`, borderRadius: '14px', padding: '16px 18px', cursor: 'pointer', background: isSelected ? '#f0f4ff' : '#fff' }}>
+                      <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, border: `2px solid ${isSelected ? '#3b6eff' : '#d1d5db'}`, background: isSelected ? 'radial-gradient(circle at center, #3b6eff 45%, #fff 45%)' : 'transparent' }}></div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: 700, fontSize: '.95rem', margin: '0 0 3px' }}>{goal.name}</p>
+                        <p style={{ fontSize: '.82rem', color: '#5c6170', margin: 0 }}>RM {(goal.saved || 0).toLocaleString()} / RM {(goal.target || 0).toLocaleString()}</p>
+                      </div>
+                      <span style={{ ...statusStyle, fontSize: '.72rem', fontWeight: 700, borderRadius: '99px', padding: '4px 12px' }}>{statusLabel}</span>
                     </div>
-                    <span style={{ ...statusStyle, fontSize: '.72rem', fontWeight: 700, borderRadius: '99px', padding: '4px 12px' }}>{statusLabel}</span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
+            
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button className="btn-modal-cancel" onClick={() => { setShowGoalModal(false); setSelectedGoal(null); }}>Cancel</button>
-              <button className="btn-modal-save" disabled={!selectedGoal} onClick={() => { setShowGoalModal(false); setShowConfirmModal(true); }} style={{ opacity: selectedGoal ? 1 : 0.5 }}>Continue</button>
+              <button className="btn-modal-save" disabled={!selectedGoal || loadingGoals} onClick={() => { setShowGoalModal(false); setShowConfirmModal(true); }} style={{ opacity: selectedGoal && !loadingGoals ? 1 : 0.5 }}>Continue</button>
             </div>
           </div>
         </div>
@@ -160,27 +197,57 @@ const InvestmentsPage = ({ user }) => {
           <div style={{ background: 'white', borderRadius: '22px', padding: '32px', maxWidth: '500px', width: '90%' }}>
             <h4 className="modal-main-title">Confirm Portfolio</h4>
             <p className="modal-main-sub">Review your portfolio choice and selected goal before applying.</p>
+            
+            {portfolioError && (
+              <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '12px', margin: '12px 0', color: '#b91c1c', fontSize: '.9rem' }}>
+                ⚠️ {portfolioError}
+              </div>
+            )}
+            
             <div className="confirm-summary">
               <div className="confirm-row"><span className="confirm-label">Portfolio</span><span className="confirm-value">{selectedRisk.charAt(0).toUpperCase() + selectedRisk.slice(1)}</span></div>
               <div className="confirm-row"><span className="confirm-label">Expected Return</span><span className="confirm-value">{riskData.returnVal}</span></div>
               <div className="confirm-row"><span className="confirm-label">Selected Goal</span><span className="confirm-value">{selectedGoal?.name}</span></div>
             </div>
+            
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
-              <button className="btn-modal-cancel" onClick={() => { setShowConfirmModal(false); setShowGoalModal(true); }}>Back</button>
-              <button className="btn-modal-save" onClick={() => {
-                if (selectedGoal) {
-                  savePortfolioAssignment(selectedGoal.id, {
-                    name: riskData.title,
-                    riskLevel: selectedRisk.charAt(0).toUpperCase() + selectedRisk.slice(1),
-                    allocation: riskData.allocation,
-                    instruments: riskData.instruments,
-                    expectedReturn: riskData.returnVal,
-                  })
+              <button className="btn-modal-cancel" onClick={() => { setShowConfirmModal(false); setShowGoalModal(true); setPortfolioError(''); }} disabled={savingPortfolio}>Back</button>
+              <button className="btn-modal-save" onClick={async () => {
+                if (!selectedGoal) return;
+                
+                setSavingPortfolio(true);
+                setPortfolioError('');
+                
+                const portfolioData = {
+                  name: riskData.title,
+                  riskLevel: selectedRisk.charAt(0).toUpperCase() + selectedRisk.slice(1),
+                  allocation: riskData.allocation,
+                  instruments: riskData.instruments,
+                  expectedReturnDisplay: riskData.returnVal, // Keep original display string only
+                };
+                
+                try {
+                  // Save to backend
+                  await apiRequest(`/api/goals/${selectedGoal._id}/portfolio`, {
+                    method: 'PUT',
+                    body: JSON.stringify(portfolioData),
+                  });
+                  
+                  // Also save to localStorage for offline access
+                  savePortfolioAssignment(selectedGoal._id, portfolioData);
+                  
+                  alert('Portfolio applied successfully!');
+                  setShowConfirmModal(false);
+                  setSelectedGoal(null);
+                } catch (err) {
+                  setPortfolioError(err.message || 'Failed to apply portfolio. Try again.');
+                  console.error('Error applying portfolio:', err);
+                } finally {
+                  setSavingPortfolio(false);
                 }
-                alert('Portfolio applied successfully!');
-                setShowConfirmModal(false);
-                setSelectedGoal(null);
-              }}>Confirm</button>
+              }} disabled={savingPortfolio} style={{ opacity: savingPortfolio ? 0.6 : 1 }}>
+                {savingPortfolio ? 'Saving...' : 'Confirm'}
+              </button>
             </div>
           </div>
         </div>

@@ -9,9 +9,9 @@ const portfolioSchema = new mongoose.Schema(
   {
     name: String,
     riskLevel: String,
-    allocation: [allocationSchema],
-    instruments: [String],
     expectedReturn: String,
+    allocation: [allocationSchema],
+    instruments: [String]
   },
   { _id: false }
 );
