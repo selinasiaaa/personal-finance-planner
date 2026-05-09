@@ -91,7 +91,7 @@ cd backend
 npm install
 
 # Create .env file in backend directory
-echo "MONGODB_URI=mongodb+srv://username:password@cluster0.2cnzjha.mongodb.net/finance_app?appName=Cluster0" >> .env
+echo "MONGODB_URI=mongodb+srv://username:password@cluster0.2cnzjha.mongodb.net/personal-finance-planner?appName=Cluster0" >> .env
 echo "JWT_SECRET=your_jwt_secret_key" >> .env
 echo "PORT=3001" >> .env
 echo "FRONTEND_URL=http://localhost:5173" >> .env
@@ -183,7 +183,7 @@ npm run lint     # Run ESLint
 
 ### Backend (.env)
 ```
-MONGODB_URI=mongodb+srv://username:password@cluster0.2cnzjha.mongodb.net/finance_app?appName=Cluster0
+MONGODB_URI=mongodb+srv://username:password@cluster0.2cnzjha.mongodb.net/personal-finance-planner?appName=Cluster0
 JWT_SECRET=your_secret_key_here
 PORT=3001
 FRONTEND_URL=http://localhost:5173
