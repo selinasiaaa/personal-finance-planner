@@ -3,6 +3,7 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password/:token',
   CHANGE_PASSWORD: '/change-password',
   DASHBOARD: '/dashboard',
   GOALS: '/',
@@ -16,6 +17,7 @@ export const AUTH_ROUTES = [
   ROUTES.LOGIN,
   ROUTES.REGISTER,
   ROUTES.FORGOT_PASSWORD,
+  ROUTES.RESET_PASSWORD,
   ROUTES.CHANGE_PASSWORD,
 ]
 

@@ -2,6 +2,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
 
 const generateToken = (id) =>{
     return jwt.sign({id}, process.env.JWT_SECRET, {
@@ -64,26 +65,45 @@ exports.login = async (req, res) => {
 };
 
 exports.forgotPassword = async (req, res) => {
-    try{
-        const user = await User.findOne({email: req.body.email});
-        if (!user){
-            return res.status(404).json({message: 'There is no user with that email'});
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        if (!user) {
+            return res.status(404).json({ message: 'There is no user with that email' });
         }
         
+        // Generate the reset token
         const resetToken = crypto.randomBytes(20).toString('hex');
-
         user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-
-        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
-
+        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; 
         await user.save();
 
-        res.status(200).json({
-            message: 'Token generated',
-            tokenForTesting: resetToken
-        });
-    } catch(error){
-        res.status(500).json({message: error.message});
+        const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+
+        const message = `You are receiving this email because you (or someone else) requested a password reset for your Personal Finance account.\n\n` +
+                        `Please click on the following link, or paste it into your browser to complete the process within 10 minutes:\n\n` +
+                        `${resetUrl}\n\n` +
+                        `If you did not request this, please ignore this email and your password will remain unchanged.`;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Password Reset Request - Personal Finance Planner',
+                message: message
+            });
+
+            res.status(200).json({ message: 'Reset link sent to your email successfully.' });
+        } catch (mailError) {
+            // If email fails to send, don't leave the token active in the database
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save();
+            
+            console.error('Email send failed:', mailError);
+            return res.status(500).json({ message: 'Email could not be sent. Please try again later.' });
+        }
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
 
