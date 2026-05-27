@@ -16,8 +16,23 @@ const authHeader = () => {
 };
 
 const json = async (res) => {
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+  const contentType = res.headers.get('content-type') || '';
+  let data = null;
+
+  if (contentType.includes('application/json')) {
+    try {
+      data = await res.json();
+    } catch (e) {
+      data = null;
+    }
+  } else {
+    const text = await res.text().catch(() => null);
+    if (text) {
+      try { data = JSON.parse(text); } catch { data = null; }
+    }
+  }
+
+  if (!res.ok) throw new Error((data && data.message) || `HTTP ${res.status}`);
   return data;
 };
 

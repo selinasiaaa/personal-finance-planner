@@ -33,17 +33,22 @@ app.get('/', (req, res) => {
 app.get('/api/market-insights', getMarketInsights);
 
 // Database connection (ONLY when not testing)
-const mongoUri = process.env.MONGODB_URI;
+const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 if (process.env.NODE_ENV !== 'test') {
-  connectDB(mongoUri);
+  (async () => {
+    const ok = await connectDB(mongoUri);
+    if (!ok) {
+      console.error('Failed to connect to MongoDB. Exiting.');
+      process.exit(1);
+    }
+
+    // Start server after DB is connected
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })();
 }
 
-// Start server (ONLY when not testing)
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
-
+module.exports = { app };
 module.exports = { app };

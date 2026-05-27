@@ -45,8 +45,19 @@ const DashboardPage = ({ user }) => {
     setLoading(true);
     try {
       const res = await fetch('/api/market-insights');
-      if (!res.ok) throw new Error('Failed to fetch market insights');
-      const payload = await res.json();
+      if (!res.ok) {
+        const errText = await res.text().catch(() => null);
+        throw new Error(errText || 'Failed to fetch market insights');
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      let payload = null;
+      if (contentType.includes('application/json')) {
+        payload = await res.json().catch(() => null);
+      } else {
+        const text = await res.text().catch(() => null);
+        try { payload = text ? JSON.parse(text) : null; } catch { payload = null; }
+      }
       const data = payload.data ?? payload;
       setDashboardData({
         trend: data.trend ?? '—',

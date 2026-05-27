@@ -3,14 +3,20 @@ const mongoose = require('mongoose');
 async function connectDB(uri) {
   if (!uri) {
     console.warn('MONGODB URI is missing — skipping DB connection');
-    return;
+    return false;
   }
 
   try {
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000,
+    });
     console.log('MongoDB connected successfully');
+    return true;
   } catch (err) {
     console.warn(`MongoDB connection failed: ${err.message}`);
+    return false;
   }
 }
 
