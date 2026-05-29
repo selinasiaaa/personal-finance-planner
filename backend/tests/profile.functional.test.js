@@ -6,48 +6,39 @@ const createTestJWT = require('../utils/createTestJWT');
 
 describe('Profile Management - Functional Tests', () => {
 
-  // FT-01 View Profile
-  test('FT-01: GET /api/users/profile returns user data', async () => {
-    const user = await User.create({
-      name: 'Test User',
-      email: 'test@user.com',
-      password: '123456'
-    });
+  afterEach(async () => {
+    await User.deleteMany({});
+  });
 
-    const token = createTestJWT(user._id);
+  // FT-06 · Unauthorized Access
+  test('FT-06: GET /api/users/profile returns 401 when no token', async () => {
+    const res = await request(app).get('/api/users/profile');
+    expect(res.status).toBe(401);
+  });
 
+  // FT-07 · Invalid Token
+  test('FT-07: GET /api/users/profile rejects invalid token', async () => {
     const res = await request(app)
       .get('/api/users/profile')
-      .set('Authorization', `Bearer ${token}`);
+      .set('Authorization', 'Bearer invalidtoken');
 
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('email', 'test@user.com');
+    expect([401, 403]).toContain(res.status);
   });
 
-  // FT-02 Update Profile
-  test('FT-02: PUT /api/users/profile updates user profile', async () => {
-    const user = await User.create({
-      name: 'Old Name',
-      email: 'old@mail.com',
-      password: '123456'
-    });
-
-    const token = createTestJWT(user._id);
-
+  // FT-08 · Update Without Auth
+  test('FT-08: PUT /api/users/profile without token returns 401', async () => {
     const res = await request(app)
       .put('/api/users/profile')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'New Name' });
+      .send({ name: 'Hack Attempt' });
 
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('name', 'New Name');
+    expect(res.status).toBe(401);
   });
 
-  // FT-03 Change Password
-  test('FT-03: PUT /api/users/change-password updates password', async () => {
+  // FT-09 · Change Password Wrong Old Password
+  test('FT-09: PUT /api/users/change-password rejects invalid password', async () => {
     const user = await User.create({
       name: 'User',
-      email: 'user@mail.com',
+      email: 'wrong@test.com',
       password: '123456'
     });
 
@@ -57,30 +48,19 @@ describe('Profile Management - Functional Tests', () => {
       .put('/api/users/change-password')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        oldPassword: '123456',
+        oldPassword: 'wrongpass',
         newPassword: 'newpass123'
       });
 
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('message');
+    expect([400, 401]).toContain(res.status);
   });
 
-  // FT-04 Delete Account
-  test('FT-04: DELETE /api/users/profile removes account', async () => {
-    const user = await User.create({
-      name: 'Delete User',
-      email: 'delete@test.com',
-      password: '123456'
-    });
-
-    const token = createTestJWT(user._id);
-
+  // FT-10 · Delete Account Without Auth
+  test('FT-10: DELETE /api/users/profile returns 401 without auth', async () => {
     const res = await request(app)
-      .delete('/api/users/profile')
-      .set('Authorization', `Bearer ${token}`);
+      .delete('/api/users/profile');
 
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(401);
   });
 
 });

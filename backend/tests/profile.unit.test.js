@@ -1,13 +1,17 @@
-const { getUserProfile, updateUserProfile, deleteUserProfile } = require('../controllers/userController');
+const {
+  getUserProfile,
+  updateUserProfile,
+  deleteUserProfile
+} = require('../controllers/userController');
+
 const User = require('../models/User');
 
 describe('Profile Management - Unit Tests', () => {
-  
-  // Helper mock response
+
   const mockRes = () => {
     const res = {};
-    res.json = jest.fn().mockReturnValue(res);
     res.status = jest.fn().mockReturnValue(res);
+    res.json = jest.fn().mockReturnValue(res);
     return res;
   };
 
@@ -15,65 +19,102 @@ describe('Profile Management - Unit Tests', () => {
     jest.restoreAllMocks();
   });
 
-  // UT-01 View Profile
-  test('UT-01: getUserProfile returns user data correctly', async () => {
-    const req = { user: { _id: 'user1' } };
+  // UT-06 · View Profile Not Found
+  test('UT-06: getUserProfile returns 404 when user not found', async () => {
+    const req = { user: { _id: 'invalidUser' } };
     const res = mockRes();
 
-    jest.spyOn(User, 'findById').mockResolvedValue({
-      _id: 'user1',
-      name: 'Ali',
-      email: 'ali@test.com',
-      phone: '0123456789',
-      occupation: 'Student'
-    });
+    jest.spyOn(User, 'findById').mockResolvedValue(null);
 
     await getUserProfile(req, res);
 
+    expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'Ali',
-        email: 'ali@test.com'
-      })
+      expect.objectContaining({ message: 'User not found' })
     );
   });
 
-  // UT-02 Update Profile
-  test('UT-02: updateUserProfile updates fields correctly', async () => {
+  // UT-07 · Update Profile Success
+  test('UT-07: updateUserProfile updates user fields correctly', async () => {
     const req = {
       user: { _id: 'user1' },
-      body: { name: 'New Name', city: 'KL' }
+      body: { name: 'Updated Name' }
     };
 
     const res = mockRes();
 
-    const saveMock = jest.fn().mockResolvedValue(true);
+    const saveMock = jest.fn().mockResolvedValue({
+      name: 'Updated Name',
+      email: 'old@mail.com'
+    });
+
+    const userMock = {
+      name: 'Old Name',
+      email: 'old@mail.com',
+      save: saveMock
+    };
+
+    jest.spyOn(User, 'findById').mockResolvedValue(userMock);
+
+    await updateUserProfile(req, res);
+
+    expect(userMock.name).toBe('Updated Name');
+    expect(saveMock).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalled();
+  });
+
+  // UT-08 · Empty Update Request
+  test('UT-08: updateUserProfile handles empty request body', async () => {
+    const req = {
+      user: { _id: 'user1' },
+      body: {}
+    };
+
+    const res = mockRes();
+
+    const saveMock = jest.fn();
 
     jest.spyOn(User, 'findById').mockResolvedValue({
-      name: 'Old Name',
-      city: 'Old City',
+      name: 'User',
+      email: 'user@test.com',
       save: saveMock
     });
 
     await updateUserProfile(req, res);
 
     expect(saveMock).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalled();
   });
 
-  // UT-03 Delete Profile
-  test('UT-03: deleteUserProfile deletes account successfully', async () => {
+  // UT-09 · Delete User Not Found
+  test('UT-09: deleteUserProfile returns 404 when user not found', async () => {
+    const req = { user: { _id: 'user1' } };
+    const res = mockRes();
+
+    jest.spyOn(User, 'findById').mockResolvedValue(null);
+
+    await deleteUserProfile(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'User not found' })
+    );
+  });
+
+  // UT-10 · Delete User Success
+  test('UT-10: deleteUserProfile deletes user successfully', async () => {
     const req = { user: { _id: 'user1' } };
     const res = mockRes();
 
     jest.spyOn(User, 'findById').mockResolvedValue({ _id: 'user1' });
-    jest.spyOn(User, 'findByIdAndDelete').mockResolvedValue({});
+    const deleteSpy = jest.spyOn(User, 'findByIdAndDelete')
+      .mockResolvedValue({});
 
     await deleteUserProfile(req, res);
 
+    expect(deleteSpy).toHaveBeenCalledWith(req.user._id);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'User account deleted successfully'
-      })
+      expect.objectContaining({ message: expect.any(String) })
     );
   });
 
