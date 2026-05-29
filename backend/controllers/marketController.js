@@ -222,4 +222,4 @@ const getMarketInsights = async (req, res) => {
   }
 };
 
-module.exports = { getMarketInsights };
+module.exports = { getMarketInsights, buildRiskSub, buildRecommendations, normalizeMarketData };
