@@ -5,7 +5,7 @@
  * All calculations live in utils/financialEngine.js via services/goalService.js.
  */
 
-const goalService = require('../services/goalService');
+const goalService = require('../services/goalService'); //Node.js way of importing.
 
 // ─── GET /api/goals ───────────────────────────────────────────────────────────
 exports.getGoals = async (req, res) => {
@@ -30,9 +30,9 @@ exports.getSummary = async (req, res) => {
 // ─── GET /api/goals/:id ───────────────────────────────────────────────────────
 exports.getGoal = async (req, res) => {
   try {
-    const goal = await goalService.getGoalById(req.params.id, req.user._id);
+    const goal = await goalService.getGoalById(req.params.id, req.user._id); // goal id and user id
     if (!goal) return res.status(404).json({ message: 'Goal not found' });
-    res.json(goal);
+    res.json(goal); //→ defaults to 200 OK, means "success, here's your data
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -46,7 +46,7 @@ exports.createGoal = async (req, res) => {
       return res.status(400).json({ message: 'name and target are required' });
     }
     const goal = await goalService.createGoal(req.user._id, req.body);
-    res.status(201).json(goal);
+    res.status(201).json(goal); // → specifically means "something new was created successfully"
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -58,7 +58,7 @@ exports.updateGoal = async (req, res) => {
     const goal = await goalService.updateGoal(req.params.id, req.user._id, req.body);
     if (!goal) return res.status(404).json({ message: 'Goal not found' });
     res.json(goal);
-  } catch (err) {
+  } catch (err) { 
     res.status(500).json({ message: err.message });
   }
 };
@@ -66,7 +66,7 @@ exports.updateGoal = async (req, res) => {
 // ─── DELETE /api/goals/:id ────────────────────────────────────────────────────
 exports.deleteGoal = async (req, res) => {
   try {
-    const deleted = await goalService.deleteGoal(req.params.id, req.user._id);
+    const deleted = await goalService.deleteGoal(req.params.id, req.user._id); // true or false
     if (!deleted) return res.status(404).json({ message: 'Goal not found' });
     res.json({ message: 'Goal deleted' });
   } catch (err) {

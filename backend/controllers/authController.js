@@ -80,7 +80,7 @@ exports.forgotPassword = async (req, res) => {
 
         res.status(200).json({
             message: 'Token generated',
-            tokenForTesting: resetToken
+            tokenForTesting: resetToken // just testing
         });
     } catch(error){
         res.status(500).json({message: error.message});

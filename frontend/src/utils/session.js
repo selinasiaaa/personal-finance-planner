@@ -9,10 +9,10 @@ export const getStoredUser = () => {
   } catch {
     return null
   }
-}
+} 
 
 export const setStoredUser = (user, remember = true) => {
-  const serialized = JSON.stringify(user)
+  const serialized = JSON.stringify(user)// storage only can save string
   if (remember) {
     localStorage.setItem('user', serialized)
     sessionStorage.removeItem('user')

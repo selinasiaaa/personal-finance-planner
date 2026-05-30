@@ -10,8 +10,8 @@
  * Returns null if the string is absent or invalid.
  */
 const parseDateLabel = (dateLabel) => {
-  if (!dateLabel || typeof dateLabel !== 'string') return null;
-  const [year, month] = dateLabel.split('-').map(Number);
+  if (!dateLabel || typeof dateLabel !== 'string') return null; //can't parse something that doesn't exist or wrong type
+  const [year, month] = dateLabel.split('-').map(Number); 
   if (!year || !month || month < 1 || month > 12) return null;
   return new Date(year, month - 1, 1); // local midnight, first of month
 };
@@ -21,14 +21,15 @@ const parseDateLabel = (dateLabel) => {
  * Whole calendar months from today until targetDate.
  * Returns 0 if target is in the past or absent.
  */
-const calcRemainingMonths = (targetDate) => {
+const calcRemainingMonths = (targetDate) => { //new Date(2027, 5, 1) 
   if (!targetDate) return 0;
-  const now = new Date();
+  const now = new Date(); //gets current date/time right now
   const months =
     (targetDate.getFullYear() - now.getFullYear()) * 12 +
     (targetDate.getMonth() - now.getMonth());
-  return Math.max(0, months);
+  return Math.max(0, months); //returns the larger value
 };
+
 
 /**
  * remainingDays
@@ -37,10 +38,11 @@ const calcRemainingMonths = (targetDate) => {
  */
 const calcRemainingDays = (targetDate) => {
   if (!targetDate) return 0;
-  const now = new Date();
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffMs = targetDate.getTime() - todayMidnight.getTime();
-  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  const now = new Date(); // now = current date AND time
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()); //time stripped, starts at midnight,00:00:00 
+  const diffMs = targetDate.getTime() - todayMidnight.getTime(); //converts Date to milliseconds ,  2026-05-28 00:00
+  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24))); //753.7 days → Math.floor → 753  ← full days only
+  //target already passed → negative days → 0
 };
 
 /**
@@ -49,7 +51,7 @@ const calcRemainingDays = (targetDate) => {
  */
 const calcProgressPercent = (savings, target) => {
   if (!target || target <= 0) return 0;
-  return Math.min(100, Math.round((savings / target) * 1000) / 10);
+  return Math.min(100, Math.round((savings / target) * 1000) / 10); //*1000/10,exactly 1 decimal place 
 };
 
 /**
@@ -114,7 +116,7 @@ const calcAdvisoryInputs = (goal, remainingMonths) => {
       newTargetDate: extraMonths
         ? (() => {
             const d = new Date();
-            d.setMonth(d.getMonth() + remainingMonths + extraMonths);
+            d.setMonth(d.getMonth() + remainingMonths + extraMonths); //JavaScript auto-rolls over months
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
           })()
         : null,
@@ -139,6 +141,7 @@ const calcAdvisoryInputs = (goal, remainingMonths) => {
     optionB,
   };
 };
+
 
 /**
  * enrichGoalData

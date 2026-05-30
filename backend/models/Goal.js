@@ -19,7 +19,7 @@ const portfolioSchema = new mongoose.Schema(
 const goalSchema = new mongoose.Schema(
   {
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId, //mongo db _id
       ref: 'User',
       required: true,
       index: true,
@@ -37,7 +37,7 @@ const goalSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Goal', goalSchema);
+module.exports = mongoose.model('Goal', goalSchema); //Creates and exports the Goal model.
 
 
 
