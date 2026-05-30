@@ -37,12 +37,12 @@ afterEach(async () => {
 });
 
 describe('Goals Functional Tests', () => {
-  test('FT-01: Returns 401 when not authenticated', async () => {
+  test('FT-16: Returns 401 when not authenticated', async () => {
     const res = await request(app).get('/api/goals');
     expect(res.status).toBe(401);
   });
 
-  test('FT-02: Creates goal successfully', async () => {
+  test('FT-17: Creates goal successfully', async () => {
     const user = await User.create({ name: 'Post User', email: 'post@test.com', password: '123456' });
     const token = createTestJWT(user._id);
 
@@ -57,7 +57,7 @@ describe('Goals Functional Tests', () => {
     expect(res.body).toHaveProperty('target', 8000);
   });
 
-  test('FT-03: GET /api/goals returns array with created goal', async () => {
+  test('FT-18: GET /api/goals returns array with created goal', async () => {
     const user = await User.create({ name: 'List User', email: 'list@test.com', password: '123456' });
     const token = createTestJWT(user._id);
     await Goal.create({ user: user._id, name: 'Vacation', target: 5000, savings: 1000, monthly: 200 });
@@ -72,7 +72,7 @@ describe('Goals Functional Tests', () => {
     expect(res.body[0]).toHaveProperty('name', 'Vacation');
   });
 
-  test('FT-04: Update goal successfully', async () => {
+  test('FT-19: Update goal successfully', async () => {
     const user = await User.create({ name: 'Upd User', email: 'upd@test.com', password: '123456' });
     const token = createTestJWT(user._id);
     const goal = await Goal.create({ user: user._id, name: 'Old Name', target: 2000 });
@@ -86,7 +86,7 @@ describe('Goals Functional Tests', () => {
     expect(res.body).toHaveProperty('name', 'New Name');
   });
 
-  test('FT-05: Delete goal successfully', async () => {
+  test('FT-20: Delete goal successfully', async () => {
     const user = await User.create({ name: 'Del User', email: 'del@test.com', password: '123456' });
     const token = createTestJWT(user._id);
     const goal = await Goal.create({ user: user._id, name: 'To Delete', target: 1000 });

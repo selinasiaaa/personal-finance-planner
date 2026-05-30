@@ -7,9 +7,9 @@ const {
 describe('Market Dashboard Unit Testing', () => {
 
   // =========================
-  // UT-21 buildRiskSub
+  // UT-26 buildRiskSub
   // =========================
-  describe('UT-21: buildRiskSub()', () => {
+  describe('UT-26: buildRiskSub()', () => {
 
     test('returns correct message for low risk', () => {
       expect(buildRiskSub('Low'))
@@ -34,9 +34,9 @@ describe('Market Dashboard Unit Testing', () => {
   });
 
   // =========================
-  // UT-22 buildRecommendations
+  // UT-27 buildRecommendations
   // =========================
-  describe('UT-22: buildRecommendations()', () => {
+  describe('UT-27: buildRecommendations()', () => {
 
     test('creates bullish recommendation', () => {
 
@@ -79,9 +79,9 @@ describe('Market Dashboard Unit Testing', () => {
   });
 
   // =========================
-  // UT-23 normalizeMarketData
+  // UT-28 normalizeMarketData
   // =========================
-  describe('UT-23: normalizeMarketData()', () => {
+  describe('UT-28: normalizeMarketData()', () => {
 
     test('returns normalized market data', () => {
 

@@ -19,8 +19,8 @@ describe('Profile Management - Unit Tests', () => {
     jest.restoreAllMocks();
   });
 
-  // UT-06 · View Profile Not Found
-  test('UT-06: getUserProfile returns 404 when user not found', async () => {
+  // UT-11 · View Profile Not Found
+  test('UT-11: getUserProfile returns 404 when user not found', async () => {
     const req = { user: { _id: 'invalidUser' } };
     const res = mockRes();
 
@@ -34,8 +34,8 @@ describe('Profile Management - Unit Tests', () => {
     );
   });
 
-  // UT-07 · Update Profile Success
-  test('UT-07: updateUserProfile updates user fields correctly', async () => {
+  // UT-12 · Update Profile Success
+  test('UT-12: updateUserProfile updates user fields correctly', async () => {
     const req = {
       user: { _id: 'user1' },
       body: { name: 'Updated Name' }
@@ -63,8 +63,8 @@ describe('Profile Management - Unit Tests', () => {
     expect(res.json).toHaveBeenCalled();
   });
 
-  // UT-08 · Empty Update Request
-  test('UT-08: updateUserProfile handles empty request body', async () => {
+  // UT-13 · Empty Update Request
+  test('UT-13: updateUserProfile handles empty request body', async () => {
     const req = {
       user: { _id: 'user1' },
       body: {}
@@ -86,8 +86,8 @@ describe('Profile Management - Unit Tests', () => {
     expect(res.json).toHaveBeenCalled();
   });
 
-  // UT-09 · Delete User Not Found
-  test('UT-09: deleteUserProfile returns 404 when user not found', async () => {
+  // UT-14 · Delete User Not Found
+  test('UT-14: deleteUserProfile returns 404 when user not found', async () => {
     const req = { user: { _id: 'user1' } };
     const res = mockRes();
 
@@ -101,8 +101,8 @@ describe('Profile Management - Unit Tests', () => {
     );
   });
 
-  // UT-10 · Delete User Success
-  test('UT-10: deleteUserProfile deletes user successfully', async () => {
+  // UT-15 · Delete User Success
+  test('UT-15: deleteUserProfile deletes user successfully', async () => {
     const req = { user: { _id: 'user1' } };
     const res = mockRes();
 

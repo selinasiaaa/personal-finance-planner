@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 describe('ROI Routes - Functional Tests', () => {
-    test('FT-01 POST /roi/save returns 201 and json', async () => {
+    test('FT-21 POST /roi/save returns 201 and json', async () => {
         jest.spyOn(RoiCalculation, 'create').mockResolvedValue({ _id: 'r1', initialInvestment: 1000 });
         const res = await request(app)
             .post('/roi/save')
@@ -28,21 +28,21 @@ describe('ROI Routes - Functional Tests', () => {
         expect(res.body).toHaveProperty('_id', 'r1');
     });
 
-    test('FT-02 GET /roi/history/:userId returns history array', async () => {
+    test('FT-22 GET /roi/history/:userId returns history array', async () => {
         jest.spyOn(RoiCalculation, 'find').mockReturnValue({ sort: jest.fn().mockResolvedValue([{ _id: 'r1' }]) });
         const res = await request(app).get('/roi/history/user1');
         expect(res.status).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
     });
 
-    test('FT-03 DELETE /roi/delete/:roiId returns 404 when not found', async () => {
+    test('FT-23 DELETE /roi/delete/:roiId returns 404 when not found', async () => {
         jest.spyOn(RoiCalculation, 'findById').mockResolvedValue(null);
         const res = await request(app).delete('/roi/delete/notfound');
         expect(res.status).toBe(404);
         expect(res.body).toHaveProperty('message', 'Roi record not found');
     });
 
-    test('FT-04 DELETE /roi/delete/:roiId returns 200 on success', async () => {
+    test('FT-24 DELETE /roi/delete/:roiId returns 200 on success', async () => {
         jest.spyOn(RoiCalculation, 'findById').mockResolvedValue({ _id: 'r1', userId: 'user1' });
         jest.spyOn(RoiCalculation, 'findByIdAndDelete').mockResolvedValue({});
         const res = await request(app).delete('/roi/delete/r1');
@@ -50,7 +50,7 @@ describe('ROI Routes - Functional Tests', () => {
         expect(res.body).toHaveProperty('message');
     });
 
-    test('FT-05 DELETE /roi/history deletes many and returns deletedCount', async () => {
+    test('FT-25 DELETE /roi/history deletes many and returns deletedCount', async () => {
         jest.spyOn(RoiCalculation, 'deleteMany').mockResolvedValue({ deletedCount: 2 });
         const res = await request(app).delete('/roi/history').send({ ids: ['r1', 'r2'] });
         expect(res.status).toBe(200);
