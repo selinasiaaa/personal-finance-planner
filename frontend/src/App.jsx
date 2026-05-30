@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { matchPath, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { getStoredUser } from './utils/session'
 import { ROUTES, AUTH_ROUTES, ROUTE_PAGE_MAP } from './constants/routes'
 import Sidebar from './components/Sidebar/Sidebar'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import ChangePasswordPage from './pages/auth/ChangePasswordPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import GoalsPage from './pages/goals/GoalsPage'
@@ -23,7 +24,7 @@ export default function App() {
   const location = useLocation()
   const resolvedUser = user ?? getStoredUser()
 
-  const isAuthPage = AUTH_ROUTES.includes(location.pathname)
+  const isAuthPage = AUTH_ROUTES.some((route) => matchPath({ path: route, end: true }, location.pathname))
   const currentPage = ROUTE_PAGE_MAP[location.pathname] || 'goals'
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function App() {
           <Route path={ROUTES.LOGIN} element={<LoginPage />} />
           <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
           <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+          <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
           <Route path={ROUTES.CHANGE_PASSWORD} element={<ChangePasswordPage user={resolvedUser} />} />
           <Route path={ROUTES.GOALS} element={<ProtectedRoute><GoalsPage user={resolvedUser} /></ProtectedRoute>} />
           <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><DashboardPage user={resolvedUser} /></ProtectedRoute>} />

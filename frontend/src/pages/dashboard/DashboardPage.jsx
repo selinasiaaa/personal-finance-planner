@@ -45,8 +45,19 @@ const DashboardPage = ({ user }) => {
     setLoading(true);
     try {
       const res = await fetch('/api/market-insights');
-      if (!res.ok) throw new Error('Failed to fetch market insights');
-      const payload = await res.json();
+      if (!res.ok) {
+        const errText = await res.text().catch(() => null);
+        throw new Error(errText || 'Failed to fetch market insights');
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      let payload = null;
+      if (contentType.includes('application/json')) {
+        payload = await res.json().catch(() => null);
+      } else {
+        const text = await res.text().catch(() => null);
+        try { payload = text ? JSON.parse(text) : null; } catch { payload = null; }
+      }
       const data = payload.data ?? payload;
       setDashboardData({
         trend: data.trend ?? '—',
@@ -327,7 +338,16 @@ const DashboardPage = ({ user }) => {
               rel="noopener noreferrer"
               style={{ display: 'flex', textDecoration: 'none', color: 'inherit' }}
             >
-              <div className={`news-thumb news-thumb--${(i % 3) + 1}`}></div>
+              <div className={`news-thumb news-thumb--${(i % 3) + 1}`}>
+                {n.photo ? (
+                  <img
+                    src={n.photo}
+                    alt={n.title || 'news'}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : null}
+              </div>
               <div className="news-content">
                 <h3 className="news-title">{n.title ?? 'Market update'}</h3>
                 <div className="news-meta">
