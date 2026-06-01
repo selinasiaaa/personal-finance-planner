@@ -10,14 +10,14 @@ describe('Profile Management - Functional Tests', () => {
     await User.deleteMany({});
   });
 
-  // FT-06 · Unauthorized Access
-  test('FT-06: GET /api/users/profile returns 401 when no token', async () => {
+  // FT-11 · Unauthorized Access
+  test('FT-11: GET /api/users/profile returns 401 when no token', async () => {
     const res = await request(app).get('/api/users/profile');
     expect(res.status).toBe(401);
   });
 
-  // FT-07 · Invalid Token
-  test('FT-07: GET /api/users/profile rejects invalid token', async () => {
+  // FT-12 · Invalid Token
+  test('FT-12: GET /api/users/profile rejects invalid token', async () => {
     const res = await request(app)
       .get('/api/users/profile')
       .set('Authorization', 'Bearer invalidtoken');
@@ -25,8 +25,8 @@ describe('Profile Management - Functional Tests', () => {
     expect([401, 403]).toContain(res.status);
   });
 
-  // FT-08 · Update Without Auth
-  test('FT-08: PUT /api/users/profile without token returns 401', async () => {
+  // FT-13 · Update Without Auth
+  test('FT-13: PUT /api/users/profile without token returns 401', async () => {
     const res = await request(app)
       .put('/api/users/profile')
       .send({ name: 'Hack Attempt' });
@@ -34,8 +34,8 @@ describe('Profile Management - Functional Tests', () => {
     expect(res.status).toBe(401);
   });
 
-  // FT-09 · Change Password Wrong Old Password
-  test('FT-09: PUT /api/users/change-password rejects invalid password', async () => {
+  // FT-14 · Change Password Wrong Old Password
+  test('FT-14: PUT /api/users/change-password rejects invalid password', async () => {
     const user = await User.create({
       name: 'User',
       email: 'wrong@test.com',
@@ -55,8 +55,8 @@ describe('Profile Management - Functional Tests', () => {
     expect([400, 401]).toContain(res.status);
   });
 
-  // FT-10 · Delete Account Without Auth
-  test('FT-10: DELETE /api/users/profile returns 401 without auth', async () => {
+  // FT-15 · Delete Account Without Auth
+  test('FT-15: DELETE /api/users/profile returns 401 without auth', async () => {
     const res = await request(app)
       .delete('/api/users/profile');
 

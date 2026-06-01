@@ -12,8 +12,8 @@ const LoginPage = () => {
   useEffect(() => { if (getStoredUser()?.email) navigate('/'); }, [navigate]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault(); //prevent refresh
+    setError(''); // clears the old message first, giving a clean state before each attempt.
     if (!isValidEmail(formData.email)) { setError('Please enter a valid email address.'); return; }
     if (!formData.password)            { setError('Please enter your password.');          return; }
     setLoading(true);

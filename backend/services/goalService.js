@@ -9,31 +9,32 @@ const { enrichGoalData, calcAdvisoryInputs } = require('../utils/financialEngine
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const toEnriched = (doc) => {
-  const plain = doc.toObject ? doc.toObject() : { ...doc };
+  const plain = doc.toObject ? doc.toObject() : { ...doc }; //  removes MongoDB internals
   return enrichGoalData(plain);
 };
 
+//Gets all goals for a specific user from MongoDB, enriches them.
 const getAllGoals = async (userId) => {
   const docs = await Goal.find({ user: userId }).sort({ createdAt: -1 });
   return docs.map(toEnriched);
 };
 
 const getGoalById = async (goalId, userId) => {
-  const doc = await Goal.findOne({ _id: goalId, user: userId });
+  const doc = await Goal.findOne({ _id: goalId, user: userId }); 
   if (!doc) return null;
-  return toEnriched(doc);
+  return toEnriched(doc); 
 };
 
 const createGoal = async (userId, data) => {
-  const doc = await Goal.create({ user: userId, ...sanitize(data) });
+  const doc = await Goal.create({ user: userId, ...sanitize(data) }); //filter , spread operator
   return toEnriched(doc);
 };
 
 const updateGoal = async (goalId, userId, data) => {
   const doc = await Goal.findOneAndUpdate(
-    { _id: goalId, user: userId },
-    { $set: sanitize(data) },
-    { new: true, runValidators: true }
+    { _id: goalId, user: userId }, //authorization
+    { $set: sanitize(data) }, //Update these specific fields with new values / only updates specific field and everything else stays the same
+    { new: true, runValidators: true } //return updated document (not old one)// run schema validation on update
   );
   if (!doc) return null;
   return toEnriched(doc);
@@ -54,11 +55,11 @@ const sanitize = ({ icon, name, desc, target, savings, monthly, dateLabel }) => 
   ...(dateLabel !== undefined && { dateLabel }),
 });
 
-const getSummary = async (userId) => {
+const getSummary = async (userId) => { //Calculates summary stats from all enriched goals.
   const enriched = await getAllGoals(userId);
   return {
     totalGoals:     enriched.length,
-    totalSaved:     enriched.reduce((s, g) => s + g.savings, 0),
+    totalSaved:     enriched.reduce((s, g) => s + g.savings, 0), //reduces(): Loops through array and accumulates a value, s: accumulator, g:current savings, 0 starting value
     monthlyTotal:   enriched.reduce((s, g) => s + g.monthly, 0),
     projectedTotal: enriched.reduce((s, g) => s + g.projectedSavings, 0),
     onTrack:        enriched.filter((g) => g.status === 'on-track' || g.status === 'completed').length,
@@ -101,8 +102,8 @@ Respond ONLY with a valid JSON object — no markdown, no extra text:
   }
 }`;
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); // creates Gemini client using API key, authenticates with Google's Gemini API
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); //selects which Gemini model
   const result = await model.generateContent(prompt);
   const raw = result.response.text();
 
@@ -135,7 +136,7 @@ Respond ONLY with a valid JSON object — no markdown, no extra text:
 const assignPortfolio = async (goalId, userId, portfolioData) => {
   const doc = await Goal.findOneAndUpdate(
     { _id: goalId, user: userId },
-    { $set: { assignedPortfolio: portfolioData } },
+    { $set: { assignedPortfolio: portfolioData } }, //// ← only updates portfolio field
     { new: true }
   );
   if (!doc) return null;

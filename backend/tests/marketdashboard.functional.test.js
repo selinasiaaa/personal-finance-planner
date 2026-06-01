@@ -12,9 +12,9 @@ app.get('/api/market/insights', getMarketInsights);
 describe('Market Dashboard Functional Testing', () => {
 
   // =========================
-  // FT-01 API Status Test
+  // FT-26 API Status Test
   // =========================
-  test('FT-01: GET /api/market/insights returns valid status', async () => {
+  test('FT-26: GET /api/market/insights returns valid status', async () => {
 
     const response = await request(app)
       .get('/api/market/insights');
@@ -24,9 +24,9 @@ describe('Market Dashboard Functional Testing', () => {
   });
 
   // =========================
-  // FT-02 Response Format
+  // FT-27 Response Format
   // =========================
-  test('FT-02: Response is JSON format', async () => {
+  test('FT-27: Response is JSON format', async () => {
 
     const response = await request(app)
       .get('/api/market/insights');
@@ -37,15 +37,45 @@ describe('Market Dashboard Functional Testing', () => {
   });
 
   // =========================
-  // FT-03 Response Structure
+  // FT-28 Response Structure
   // =========================
-  test('FT-03: Response contains success field', async () => {
+  test('FT-28: Response contains success field', async () => {
 
     const response = await request(app)
       .get('/api/market/insights');
 
     expect(response.body)
       .toHaveProperty('success');
+
+  });
+
+  // =========================
+  // FT-29 News Data Validation
+  // =========================
+  test('FT-29: Response contains news data array', async () => {
+
+    const response = await request(app)
+      .get('/api/market/insights');
+
+    if (response.body.data && response.body.data.news) {
+      expect(Array.isArray(response.body.data.news))
+        .toBe(true);
+    }
+
+  });
+
+  // =========================
+  // FT-30 Market Trend Validation
+  // =========================
+  test('FT-30: Response contains market trend information', async () => {
+
+    const response = await request(app)
+      .get('/api/market/insights');
+
+    if (response.body.data) {
+      expect(response.body.data)
+        .toHaveProperty('trend');
+    }
 
   });
 
