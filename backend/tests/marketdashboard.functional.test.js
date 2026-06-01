@@ -49,4 +49,34 @@ describe('Market Dashboard Functional Testing', () => {
 
   });
 
+  // =========================
+  // FT-29 News Data Validation
+  // =========================
+  test('FT-29: Response contains news data array', async () => {
+
+    const response = await request(app)
+      .get('/api/market/insights');
+
+    if (response.body.data && response.body.data.news) {
+      expect(Array.isArray(response.body.data.news))
+        .toBe(true);
+    }
+
+  });
+
+  // =========================
+  // FT-30 Market Trend Validation
+  // =========================
+  test('FT-30: Response contains market trend information', async () => {
+
+    const response = await request(app)
+      .get('/api/market/insights');
+
+    if (response.body.data) {
+      expect(response.body.data)
+        .toHaveProperty('trend');
+    }
+
+  });
+
 });

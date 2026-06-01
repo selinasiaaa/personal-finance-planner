@@ -118,6 +118,48 @@ describe('Market Dashboard Unit Testing', () => {
 
     });
 
+  // =========================
+  // UT-29 Empty News Handling
+  // =========================
+  describe('UT-29: Empty News Handling', () => {
+
+    test('handles empty news array correctly', () => {
+      const input = {
+        summary: {
+          trend: '+50 pts',
+          trendDirection: 'bullish',
+          topPerformer: 'Energy',
+          performanceReading: '+2%',
+          riskLevel: 'Moderate'
+        },
+        news: []
+      };
+      const result = normalizeMarketData(input);
+      expect(Array.isArray(result.news))
+        .toBe(true);
+      expect(result.news.length)
+        .toBe(0);
+    });
+
+  });
+
+  // =========================
+  // UT-30 Missing Summary Handling
+  // =========================
+  describe('UT-30: Missing Summary Handling', () => {
+
+    test('handles missing summary fields without crashing', () => {
+      const input = {
+        summary: {},
+        news: []
+      };
+      const result = normalizeMarketData(input);
+      expect(result)
+        .toBeDefined();
+    });
+
+  });
+
   });
 
 });
